@@ -9,7 +9,7 @@ interface LoggedProps {
 
 const Logged: FC<LoggedProps> = ({ }) => {
   return (
-    <div className='flex flex-col w-full bg-white p-12'>
+    <div className='flex flex-col w-full bg-white p-12'>              
 
       <p className='font-bold text-2xl'>Welcome, user</p>
 

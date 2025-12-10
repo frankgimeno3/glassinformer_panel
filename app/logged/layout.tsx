@@ -35,7 +35,7 @@ export default function RootLayout({
           <div className="flex flex-row bg-gray-100 min-h-screen text-gray-600 w-full">
             <Leftnav />
               {children}
-          </div>
+           </div>
         </div>
       </body>
     </html>
