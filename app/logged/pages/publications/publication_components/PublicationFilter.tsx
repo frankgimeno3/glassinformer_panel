@@ -1,8 +1,9 @@
 "use client";
 import React, { FC, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import publicacionesData from '@/app/contents/publicaciones.json';
-const publicaciones = publicacionesData as any[];
+import { useRouter } from 'next/navigation';  
+import publicationsData from '@/app/contents/publicationsContents.json';
+import { publicationInterface } from '@/app/contents/interfaces';
+const publications = publicationsData as any[];
 
 interface PublicationFilterProps {}
 
@@ -27,9 +28,9 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
     const ediciones = new Set<string>();
     const numeros = new Set<string>();
 
-    publicaciones.forEach((pub: any) => {
-      if (pub.publication_date) {
-        const date = new Date(pub.publication_date);
+    publications.forEach((pub: publicationInterface) => {
+      if (pub.date) {
+        const date = new Date(pub.date);
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = String(date.getFullYear());
         months.add(month);
@@ -59,7 +60,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
     const params: string[] = [];
     
     if (publicationMonth && publicationYear) {
-      params.push(`publication_date__${publicationYear}-${publicationMonth}`);
+      params.push(`date__${publicationYear}-${publicationMonth}`);
     }
     if (revista) {
       params.push(`revista__${revista}`);

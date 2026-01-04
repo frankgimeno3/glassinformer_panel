@@ -3,14 +3,14 @@
 import { FC } from "react";
 import { useRouter } from "next/navigation";
 
-import publicaciones from "@/app/contents/publicaciones.json";
+import publications from "@/app/contents/publicationsContents.json";
 import PublicationFilter from "./publication_components/PublicationFilter";
 
 interface PublicationsProps {}
 
 const Publications: FC<PublicationsProps> = ({}) => {
   const router = useRouter();
-  const publicationsArray = Array.isArray(publicaciones) ? publicaciones : [];
+  const publicationsArray = Array.isArray(publications) ? publications : [];
 
   return (
     <div className="flex flex-col w-full bg-white">

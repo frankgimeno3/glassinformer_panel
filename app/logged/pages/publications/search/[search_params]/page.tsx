@@ -1,5 +1,5 @@
 import { FC } from "react";
-import publicaciones from "@/app/contents/publicaciones.json";
+import publications from "@/app/contents/publicationsContents.json";
 import PublicationSearchClient from "./PublicationSearchClient";
 
 interface PageProps {
@@ -21,7 +21,7 @@ const PublicationSearchResults: FC<PageProps> = async ({ params }) => {
   }, {} as Record<string, string>);
 
   // Filter publications based on search params
-  const filteredPublications = publicaciones.filter((pub: any) => {
+  const filteredPublications = publications.filter((pub: any) => {
     // Filter by publication_date (year-month)
     if (filters.publication_date) {
       const [year, month] = filters.publication_date.split('-');
