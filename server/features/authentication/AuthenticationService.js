@@ -1,32 +1,69 @@
 import {CognitoJwtVerifier} from "aws-jwt-verify";
 import {COGNITO} from "../../../env.js";
 
-const idVerifier = CognitoJwtVerifier.create({
-    userPoolId: COGNITO.USER_POOL_ID,
-    clientId: COGNITO.CLIENT_ID,
-    tokenUse: "id",
-});
+let idVerifier = null;
+let accessVerifier = null;
 
-const accessVerifier = CognitoJwtVerifier.create({
-    userPoolId: COGNITO.USER_POOL_ID,
-    clientId: COGNITO.CLIENT_ID,
-    tokenUse: "access",
-});
+function getIdVerifier() {
+    if (!idVerifier) {
+        const userPoolId = COGNITO.USER_POOL_ID;
+        const clientId = COGNITO.CLIENT_ID;
+        
+        if (!userPoolId || !clientId) {
+            throw new Error("Missing Cognito env vars: USER_POOL_ID and/or CLIENT_ID");
+        }
+        
+        idVerifier = CognitoJwtVerifier.create({
+            userPoolId,
+            clientId,
+            tokenUse: "id",
+        });
+    }
+    return idVerifier;
+}
+
+function getAccessVerifier() {
+    if (!accessVerifier) {
+        const userPoolId = COGNITO.USER_POOL_ID;
+        const clientId = COGNITO.CLIENT_ID;
+        
+        if (!userPoolId || !clientId) {
+            throw new Error("Missing Cognito env vars: USER_POOL_ID and/or CLIENT_ID");
+        }
+        
+        accessVerifier = CognitoJwtVerifier.create({
+            userPoolId,
+            clientId,
+            tokenUse: "access",
+        });
+    }
+    return accessVerifier;
+}
 
 export async function verifyIdToken(idToken){
-    return await idVerifier.verify(idToken);
+    const verifier = getIdVerifier();
+    return await verifier.verify(idToken);
 }
 
 export async function verifyAccessToken(accessToken){
-    return await accessVerifier.verify(accessToken);
+    const verifier = getAccessVerifier();
+    return await verifier.verify(accessToken);
 }
 
 export async function fetchNewTokens(refresh_token) {
-    const tokenEndpoint = `https://${COGNITO.DOMAIN}.auth.${COGNITO.REGION}.amazoncognito.com/oauth2/token`;
+    const domain = COGNITO.DOMAIN;
+    const region = COGNITO.REGION;
+    const clientId = COGNITO.CLIENT_ID;
+    
+    if (!domain || !region || !clientId) {
+        throw new Error("Missing Cognito env vars: DOMAIN, REGION, and/or CLIENT_ID");
+    }
+    
+    const tokenEndpoint = `https://${domain}.auth.${region}.amazoncognito.com/oauth2/token`;
 
     const body = new URLSearchParams({
         grant_type: 'refresh_token',
-        client_id: COGNITO.CLIENT_ID,
+        client_id: clientId,
         refresh_token,
     })
 
