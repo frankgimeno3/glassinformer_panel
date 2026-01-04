@@ -3,27 +3,50 @@ import { signIn, confirmSignIn, signOut } from "aws-amplify/auth/cognito";
 import { cognitoUserPoolsTokenProvider } from "aws-amplify/auth/cognito";
 import { CookieStorage, decodeJWT, fetchAuthSession } from "@aws-amplify/core";
 
-const userPoolId = process.env.NEXT_PUBLIC_USER_POOL_ID;
-const userPoolClientId = process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID;
+let isConfigured = false;
 
-if (!userPoolId || !userPoolClientId) {
-  throw new Error("Missing Cognito env vars: NEXT_PUBLIC_USER_POOL_ID and/or NEXT_PUBLIC_USER_POOL_CLIENT_ID");
-}
+function configureAmplify() {
+  // Only configure once
+  if (isConfigured) {
+    return;
+  }
 
-Amplify.configure({
-  Auth: {
-    Cognito: {
-      userPoolId,
-      userPoolClientId,
-      loginWith: {
-        username: true
+  const userPoolId = process.env.NEXT_PUBLIC_USER_POOL_ID;
+  const userPoolClientId = process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID;
+
+  // Only configure if env vars are available (skip during build if they're not set)
+  if (!userPoolId || !userPoolClientId) {
+    // During build time, env vars might not be available, so we'll configure later at runtime
+    // This prevents build failures while still allowing runtime configuration
+    return;
+  }
+
+  Amplify.configure({
+    Auth: {
+      Cognito: {
+        userPoolId,
+        userPoolClientId,
+        loginWith: {
+          username: true
+        }
       }
     }
-  }
-});
+  });
+
+  isConfigured = true;
+}
 
 export default class AuthenticationService {
   static async login(username, password) {
+    configureAmplify();
+    
+    // Verify configuration was successful before proceeding
+    const userPoolId = process.env.NEXT_PUBLIC_USER_POOL_ID;
+    const userPoolClientId = process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID;
+    if (!userPoolId || !userPoolClientId) {
+      throw new Error("Missing Cognito env vars: NEXT_PUBLIC_USER_POOL_ID and/or NEXT_PUBLIC_USER_POOL_CLIENT_ID");
+    }
+    
     cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
 
     const response = await signIn({
@@ -58,6 +81,15 @@ export default class AuthenticationService {
   }
 
   static async logout() {
+    configureAmplify();
+    
+    // Verify configuration was successful before proceeding
+    const userPoolId = process.env.NEXT_PUBLIC_USER_POOL_ID;
+    const userPoolClientId = process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID;
+    if (!userPoolId || !userPoolClientId) {
+      throw new Error("Missing Cognito env vars: NEXT_PUBLIC_USER_POOL_ID and/or NEXT_PUBLIC_USER_POOL_CLIENT_ID");
+    }
+    
     cognitoUserPoolsTokenProvider.setKeyValueStorage(new CookieStorage());
 
     if (typeof window !== "undefined") {
