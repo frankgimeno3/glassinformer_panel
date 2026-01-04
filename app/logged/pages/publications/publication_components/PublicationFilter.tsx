@@ -43,7 +43,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
       uniqueMonths: Array.from(months).sort(),
       uniqueYears: Array.from(years).sort().reverse(),
       uniqueRevistas: Array.from(revistas).sort(),
-      uniqueNumeros: Array.from(numeros).sort()
+      uniqueNumeros: Array.from(numeros).sort().reverse() // Most recent first (descending order)
     };
   }, []);
 
@@ -113,17 +113,17 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
               </select>
             </div>
 
-            {/* Number */}
+            {/* Exact Publication */}
             <div>
               <label className='block text-xs font-medium text-gray-700 mb-2'>
-                Number
+                Exact Publication
               </label>
               <select
                 value={numero}
                 onChange={e => setNumero(e.target.value)}
                 className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
               >
-                <option value=''>Select number</option>
+                <option value=''>Select exact publication</option>
                 {uniqueNumeros.map(num => (
                   <option key={num} value={num}>
                     {num}
