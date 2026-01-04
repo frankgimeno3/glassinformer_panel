@@ -48,9 +48,9 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
   }, []);
 
   const monthNames: { [key: string]: string } = {
-    '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
-    '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
-    '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+    '01': 'January', '02': 'February', '03': 'March', '04': 'April',
+    '05': 'May', '06': 'June', '07': 'July', '08': 'August',
+    '09': 'September', '10': 'October', '11': 'November', '12': 'December'
   };
 
   const buildSearchParams = () => {
@@ -94,17 +94,17 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
       {isFilterOpen && (
         <div className='bg-white mb-12 shadow-xl border border-gray-100 p-5'>
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4'>
-            {/* Revista - Leftmost */}
+            {/* Magazine - Leftmost */}
             <div>
               <label className='block text-xs font-medium text-gray-700 mb-2'>
-                Revista
+                Magazine
               </label>
               <select
                 value={revista}
                 onChange={e => setRevista(e.target.value)}
                 className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
               >
-                <option value=''>Seleccionar revista</option>
+                <option value=''>Select magazine</option>
                 {uniqueRevistas.map(rev => (
                   <option key={rev} value={rev}>
                     {rev}
@@ -113,17 +113,17 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
               </select>
             </div>
 
-            {/* Número exacto */}
+            {/* Number */}
             <div>
               <label className='block text-xs font-medium text-gray-700 mb-2'>
-                Número
+                Number
               </label>
               <select
                 value={numero}
                 onChange={e => setNumero(e.target.value)}
                 className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
               >
-                <option value=''>Seleccionar número</option>
+                <option value=''>Select number</option>
                 {uniqueNumeros.map(num => (
                   <option key={num} value={num}>
                     {num}
@@ -132,10 +132,10 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
               </select>
             </div>
 
-            {/* Filtrar por rango de fechas - Desde */}
+            {/* Filter by date range - From */}
             <div className='col-span-2'>
               <label className='block text-xs font-medium text-gray-700 mb-2'>
-                Filtrar por rango de fechas - Desde
+                Filter by date range - From
               </label>
               <div className='grid grid-cols-2 gap-2'>
                 <select
@@ -143,7 +143,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
                   onChange={e => setDateFromMonth(e.target.value)}
                   className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
                 >
-                  <option value=''>Mes</option>
+                  <option value=''>Month</option>
                   {uniqueMonths.map(month => (
                     <option key={month} value={month}>
                       {monthNames[month] || month}
@@ -155,7 +155,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
                   onChange={e => setDateFromYear(e.target.value)}
                   className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
                 >
-                  <option value=''>Año</option>
+                  <option value=''>Year</option>
                   {uniqueYears.map(year => (
                     <option key={year} value={year}>
                       {year}
@@ -165,10 +165,10 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
               </div>
             </div>
 
-            {/* Filtrar por rango de fechas - Hasta */}
+            {/* Filter by date range - To */}
             <div className='col-span-2'>
               <label className='block text-xs font-medium text-gray-700 mb-2'>
-                Filtrar por rango de fechas - Hasta
+                Filter by date range - To
               </label>
               <div className='grid grid-cols-2 gap-2'>
                 <select
@@ -176,7 +176,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
                   onChange={e => setDateToMonth(e.target.value)}
                   className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
                 >
-                  <option value=''>Mes</option>
+                  <option value=''>Month</option>
                   {uniqueMonths.map(month => (
                     <option key={month} value={month}>
                       {monthNames[month] || month}
@@ -188,7 +188,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
                   onChange={e => setDateToYear(e.target.value)}
                   className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
                 >
-                  <option value=''>Año</option>
+                  <option value=''>Year</option>
                   {uniqueYears.map(year => (
                     <option key={year} value={year}>
                       {year}
@@ -205,14 +205,14 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
                 href={getFilterHref()}
                 className='px-4 py-2 text-sm cursor-pointer rounded-lg shadow-xl bg-blue-950 text-white hover:bg-blue-950/80 inline-block'
               >
-                Filtrar
+                Filter
               </Link>
             ) : (
               <button
                 disabled
                 className='px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-400 cursor-not-allowed'
               >
-                Filtrar
+                Filter
               </button>
             )}
           </div>

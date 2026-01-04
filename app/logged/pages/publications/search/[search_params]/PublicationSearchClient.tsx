@@ -5,9 +5,9 @@ import Link from "next/link";
 import PublicationFilter from "../../publication_components/PublicationFilter";
 
 const monthNames: { [key: string]: string } = {
-  '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
-  '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
-  '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+  '01': 'January', '02': 'February', '03': 'March', '04': 'April',
+  '05': 'May', '06': 'June', '07': 'July', '08': 'August',
+  '09': 'September', '10': 'October', '11': 'November', '12': 'December'
 };
 
 interface PublicationSearchClientProps {
@@ -20,36 +20,36 @@ const PublicationSearchClient: FC<PublicationSearchClientProps> = ({ filteredPub
   // Build heading
   const filterDescriptions: string[] = [];
   if (filters.revista) {
-    filterDescriptions.push(`Revista: ${filters.revista}`);
+    filterDescriptions.push(`Magazine: ${filters.revista}`);
   }
   if (filters.número) {
-    filterDescriptions.push(`Número: ${filters.número}`);
+    filterDescriptions.push(`Number: ${filters.número}`);
   }
   if (filters.dateFrom) {
     const [year, month] = filters.dateFrom.split('-');
     const monthName = month ? monthNames[month] || month : '';
     if (month && year) {
-      filterDescriptions.push(`Desde: ${monthName} ${year}`);
+      filterDescriptions.push(`From: ${monthName} ${year}`);
     }
   }
   if (filters.dateTo) {
     const [year, month] = filters.dateTo.split('-');
     const monthName = month ? monthNames[month] || month : '';
     if (month && year) {
-      filterDescriptions.push(`Hasta: ${monthName} ${year}`);
+      filterDescriptions.push(`To: ${monthName} ${year}`);
     }
   }
 
   const heading = filterDescriptions.length > 0
-    ? `Publicaciones: ${filterDescriptions.join(', ')}`
-    : 'Resultados de búsqueda';
+    ? `Publications: ${filterDescriptions.join(', ')}`
+    : 'Search results';
 
   return (
     <div className="flex flex-col w-full bg-white">
       <div className="flex flex-col text-center bg-blue-950/70 p-5 px-46 text-white">
         <h2 className="text-xl font-semibold">{heading}</h2>
         <p className="text-xs text-gray-200 mt-1">
-          {filteredPublications.length} publicación{filteredPublications.length !== 1 ? 'es' : ''} encontrada{filteredPublications.length !== 1 ? 's' : ''}
+          {filteredPublications.length} publication{filteredPublications.length !== 1 ? 's' : ''} found
         </p>
       </div>
 
@@ -82,7 +82,7 @@ const PublicationSearchClient: FC<PublicationSearchClientProps> = ({ filteredPub
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
-            <p className="text-gray-500 text-lg">No se encontraron publicaciones con los filtros seleccionados</p>
+            <p className="text-gray-500 text-lg">No publications found with the selected filters</p>
           </div>
         )}
       </div>

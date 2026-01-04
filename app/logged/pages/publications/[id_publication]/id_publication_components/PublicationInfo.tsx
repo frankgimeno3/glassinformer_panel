@@ -37,9 +37,9 @@ const PublicationInfo: FC<PublicationInfoProps> = ({
             </div>
           </div>
 
-          {/* Revista */}
+          {/* Magazine */}
           <div className="relative flex flex-col rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <label className="mb-1 text-sm font-medium text-gray-500">Revista</label>
+            <label className="mb-1 text-sm font-medium text-gray-500">Magazine</label>
             <div className="relative flex flex-row items-center">
               <p className="text-base text-gray-700">{revista}</p>
               <div className="absolute bottom-0 right-0">
@@ -48,9 +48,9 @@ const PublicationInfo: FC<PublicationInfoProps> = ({
             </div>
           </div>
 
-          {/* Número */}
+          {/* Number */}
           <div className="relative flex flex-col rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <label className="mb-1 text-sm font-medium text-gray-500">Número</label>
+            <label className="mb-1 text-sm font-medium text-gray-500">Number</label>
             <div className="relative flex flex-row items-center">
               <p className="text-base text-gray-700">{número}</p>
               <div className="absolute bottom-0 right-0">
