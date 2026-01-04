@@ -1,6 +1,6 @@
 "use client"
 import React, { FC, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface ArticleFilterProps {}
 
@@ -10,7 +10,6 @@ const ArticleFilter: FC<ArticleFilterProps> = ({ }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('date');
   const [filterValue, setFilterValue] = useState('');
-  const router = useRouter();
 
   const toggleFilter = () => {
     setIsFilterOpen(prev => !prev);
@@ -23,12 +22,10 @@ const ArticleFilter: FC<ArticleFilterProps> = ({ }) => {
 
   const isFilterButtonEnabled = filterValue.trim() !== '';
 
-  const handleFilter = () => {
-    if (!isFilterButtonEnabled) return;
+  const getFilterHref = () => {
+    if (!isFilterButtonEnabled) return '#';
     const searchParam = `${selectedFilter}__${filterValue.trim()}`;
-    router.push(
-      `/logged/pages/articles/search/${encodeURIComponent(searchParam)}`
-    );
+    return `/logged/pages/articles/search/${encodeURIComponent(searchParam)}`;
   };
 
   return (
@@ -103,17 +100,21 @@ const ArticleFilter: FC<ArticleFilterProps> = ({ }) => {
                   placeholder='Type a company to filter'
                 />
               )}
-              <button
-                disabled={!isFilterButtonEnabled}
-                onClick={handleFilter}
-                className={
-                  isFilterButtonEnabled
-                    ? 'px-3 py-1 text-xs cursor-pointer rounded-lg shadow-xl bg-blue-950 text-white'
-                    : 'px-3 py-1 text-xs rounded-lg bg-gray-200 text-gray-400 cursor-not-allowed'
-                }
-              >
-                Filter
-              </button>
+              {isFilterButtonEnabled ? (
+                <Link
+                  href={getFilterHref()}
+                  className='px-3 py-1 text-xs cursor-pointer rounded-lg shadow-xl bg-blue-950 text-white inline-block'
+                >
+                  Filter
+                </Link>
+              ) : (
+                <button
+                  disabled
+                  className='px-3 py-1 text-xs rounded-lg bg-gray-200 text-gray-400 cursor-not-allowed'
+                >
+                  Filter
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 "use client"
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { FC } from 'react';
 
 interface LeftnavProps {
@@ -7,21 +7,17 @@ interface LeftnavProps {
 }
 
 const Leftnav: FC<LeftnavProps> = ({ }) => {
-  const router = useRouter()
   return (
     <div className='flex flex-col bg-gray-100 pl-3 ' style={{ "width": "200px" }}>
-      <div className='flex flex-row  hover:bg-gray-200/50 hover:text-gray-900 pl-4 py-4 cursor-pointer'
-        onClick={() => { router.push('/logged/pages/articles') }}>
+      <Link href='/logged/pages/articles' className='flex flex-row  hover:bg-gray-200/50 hover:text-gray-900 pl-4 py-4 cursor-pointer'>
         <p>Articles</p>
-      </div>
-      <div className='flex flex-row  hover:bg-gray-200/50 hover:text-gray-900 pl-4 py-4 cursor-pointer'
-        onClick={() => { router.push('/logged/pages/publications') }}>
+      </Link>
+      <Link href='/logged/pages/publications' className='flex flex-row  hover:bg-gray-200/50 hover:text-gray-900 pl-4 py-4 cursor-pointer'>
         <p>Publications</p>
-      </div>
-            <div className='flex flex-row  hover:bg-gray-200/50 hover:text-gray-900 pl-4 py-4 cursor-pointer'
-        onClick={() => { router.push('/logged/pages/users') }}>
+      </Link>
+      <Link href='/logged/pages/users' className='flex flex-row  hover:bg-gray-200/50 hover:text-gray-900 pl-4 py-4 cursor-pointer'>
         <p>Users</p>
-      </div>
+      </Link>
     </div>
   );
 };

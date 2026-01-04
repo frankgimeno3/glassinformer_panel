@@ -1,7 +1,7 @@
 "use client";
 
 import { FC } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import PublicationFilter from "../../publication_components/PublicationFilter";
 
 const monthNames: { [key: string]: string } = {
@@ -16,7 +16,6 @@ interface PublicationSearchClientProps {
 }
 
 const PublicationSearchClient: FC<PublicationSearchClientProps> = ({ filteredPublications, filters }) => {
-  const router = useRouter();
 
   // Build heading
   const filterDescriptions: string[] = [];
@@ -57,9 +56,9 @@ const PublicationSearchClient: FC<PublicationSearchClientProps> = ({ filteredPub
       <div className="flex flex-wrap py-5 gap-12 justify-center">
         {filteredPublications.length > 0 ? (
           filteredPublications.map((pub: any, index: number) => (
-            <div
+            <Link
               key={index}
-              onClick={() => router.push(`/logged/pages/publications/${pub.id_publication}`)}
+              href={`/logged/pages/publications/${pub.id_publication}`}
               className="flex flex-col shadow-xl w-80 p-2 border-t border-gray-100 bg-gray-100/50 hover:bg-white min-h-[500px] cursor-pointer"
             >
               <div className="w-full h-56 bg-gray-300" />
@@ -80,7 +79,7 @@ const PublicationSearchClient: FC<PublicationSearchClientProps> = ({ filteredPub
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-12">

@@ -1,6 +1,6 @@
 "use client";
 import React, { FC, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';  
+import Link from 'next/link';
 import publicationsData from '@/app/contents/publicationsContents.json';
 import { publicationInterface } from '@/app/contents/interfaces';
 const publications = publicationsData as any[];
@@ -14,7 +14,6 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
   const [revista, setRevista] = useState('');
   const [edicion, setEdicion] = useState('');
   const [numero, setNumero] = useState('');
-  const router = useRouter();
 
   const toggleFilter = () => {
     setIsFilterOpen(prev => !prev);
@@ -75,13 +74,12 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
     return params.join('&');
   };
 
-  const handleFilter = () => {
+  const getFilterHref = () => {
     const searchParams = buildSearchParams();
     if (searchParams) {
-      router.push(
-        `/logged/pages/publications/search/${encodeURIComponent(searchParams)}`
-      );
+      return `/logged/pages/publications/search/${encodeURIComponent(searchParams)}`;
     }
+    return '#';
   };
 
   const hasAnyFilter = publicationMonth || publicationYear || revista || edicion || numero;
@@ -195,17 +193,21 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
           </div>
 
           <div className='flex justify-end mt-4'>
-            <button
-              onClick={handleFilter}
-              disabled={!canFilter}
-              className={
-                canFilter
-                  ? 'px-4 py-2 text-sm cursor-pointer rounded-lg shadow-xl bg-blue-950 text-white hover:bg-blue-950/80'
-                  : 'px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-400 cursor-not-allowed'
-              }
-            >
-              Filtrar
-            </button>
+            {canFilter ? (
+              <Link
+                href={getFilterHref()}
+                className='px-4 py-2 text-sm cursor-pointer rounded-lg shadow-xl bg-blue-950 text-white hover:bg-blue-950/80 inline-block'
+              >
+                Filtrar
+              </Link>
+            ) : (
+              <button
+                disabled
+                className='px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-400 cursor-not-allowed'
+              >
+                Filtrar
+              </button>
+            )}
           </div>
         </div>
       )}

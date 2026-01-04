@@ -1,7 +1,7 @@
 "use client";
 
 import { FC } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import publications from "@/app/contents/publicationsContents.json";
 import PublicationFilter from "./publication_components/PublicationFilter";
@@ -9,7 +9,6 @@ import PublicationFilter from "./publication_components/PublicationFilter";
 interface PublicationsProps {}
 
 const Publications: FC<PublicationsProps> = ({}) => {
-  const router = useRouter();
   const publicationsArray = Array.isArray(publications) ? publications : [];
 
   return (
@@ -22,9 +21,9 @@ const Publications: FC<PublicationsProps> = ({}) => {
 
       <div className="flex flex-wrap py-5 gap-12 justify-center">
         {publicationsArray.map((pub: any, index: number) => ( 
-          <div
+          <Link
             key={index}
-            onClick={() => router.push(`/logged/pages/publications/${pub.id_publication}`)}
+            href={`/logged/pages/publications/${pub.id_publication}`}
             className="flex flex-col shadow-xl w-80 p-2 border-t border-gray-100 bg-gray-100/50 hover:bg-white min-h-[500px] cursor-pointer"
           >
             <div className="w-full h-56 bg-gray-300" />
@@ -45,7 +44,7 @@ const Publications: FC<PublicationsProps> = ({}) => {
                 </span>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
