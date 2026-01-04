@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@aws-amplify/core": "^6.15.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.962.0",
     "aws-amplify": "^6.15.9",
     "aws-jwt-verify": "^5.1.1",
+    "joi": "^18.0.2",
     "next": "16.0.5",
     "pg": "^8.16.3",
     "react": "19.2.0",
