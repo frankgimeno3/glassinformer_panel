@@ -13,3 +13,14 @@ export interface articleMiniatureInterface {
     contenidoSubtitulo: string,
     url_imagen: string
 }
+
+export interface publicationInterface {
+  id_publication: string;
+  publicationTitle: string;
+  publicationName: string;
+  date: string;
+  revista: string;
+  edición: string;
+  número: number | string;
+  tags: string[];
+}
