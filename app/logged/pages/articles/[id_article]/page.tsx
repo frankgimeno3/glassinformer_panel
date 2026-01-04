@@ -1,139 +1,236 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
-import { useEffect } from "react";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 
 import articles from "@/app/contents/articlesContents.json";
 import contents from "@/app/contents/contentsContents.json";
 
 import { articleInterface } from "@/app/contents/interfaces";
+import EditContentsModal from "@/app/logged/logged_components/modals/EditContentsModal";
+import AddTagModal from "@/app/logged/logged_components/modals/AddTagModal";
+import ArticleHeader from "./id_article_components/ArticleHeader";
+import ArticleMainImage from "./id_article_components/ArticleMainImage";
+import ArticleTags from "./id_article_components/ArticleTags";
+import ArticleContentsList from "./id_article_components/ArticleContentsList";
+
+
+
+type EditTarget =
+  | { kind: "articleTitle" }
+  | { kind: "articleSubtitle" }
+  | { kind: "articleMainImage" }
+  | { kind: "content"; contentId: string; field: "center" | "left" | "right" };
 
 export default function IdArticlePage() {
-  const router = useRouter();
-  const params = useParams(); // 🔹 sin genérico
-  const id_article = params?.id_article as string; // 🔹 casteamos
-
-  useEffect(() => {
-    console.log("ID_ARTICLE (desde params):", id_article);
-  }, [id_article]);
+  const params = useParams();
+  const id_article = params?.id_article as string;
 
   const selectedArticle = articles.find(
-    (a: articleInterface) => a.id_article === id_article
+    (article: articleInterface) => article.id_article === id_article
   );
 
   if (!selectedArticle) {
     return (
       <main style={{ padding: "1rem" }}>
         <p className="text-red-500">
-          The article you are looking for doesn't exist.
+          The article you are looking for does not exist.
         </p>
       </main>
     );
   }
 
-  const renderContent = (contentId: string) => {
-    const contentData = contents.find((c) => c.content_id === contentId);
+  const [articleData, setArticleData] = useState<articleInterface>(
+    selectedArticle
+  );
+  const [contentsData, setContentsData] = useState<any[]>(contents);
 
-    if (!contentData) {
-      return (
-        <div className="p-4 bg-red-100 text-red-700 rounded-md">
-          ❌ Content not found: {contentId}
-        </div>
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [modalInitialValue, setModalInitialValue] = useState<string>("");
+  const [modalTitle, setModalTitle] = useState<string>("Edit contents");
+  const [currentEditTarget, setCurrentEditTarget] =
+    useState<EditTarget | null>(null);
+
+  const [isAddTagModalOpen, setIsAddTagModalOpen] = useState<boolean>(false);
+
+  const openEditModal = (
+    editTarget: EditTarget,
+    value: string,
+    title: string = "Edit contents"
+  ) => {
+    setCurrentEditTarget(editTarget);
+    setModalInitialValue(value);
+    setModalTitle(title);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setCurrentEditTarget(null);
+  };
+
+  const handleSaveEditChanges = (newValue: string) => {
+    if (!currentEditTarget) {
+      return;
+    }
+
+    if (currentEditTarget.kind === "articleTitle") {
+      setArticleData((previousArticleData) => ({
+        ...previousArticleData,
+        articleTitle: newValue,
+      }));
+    } else if (currentEditTarget.kind === "articleSubtitle") {
+      setArticleData((previousArticleData) => ({
+        ...previousArticleData,
+        articleSubtitle: newValue,
+      }));
+    } else if (currentEditTarget.kind === "articleMainImage") {
+      setArticleData((previousArticleData) => ({
+        ...previousArticleData,
+        article_main_image_url: newValue,
+      }));
+    } else if (currentEditTarget.kind === "content") {
+      setContentsData((previousContentsData: any[]) =>
+        previousContentsData.map((contentItem) => {
+          if (contentItem.content_id !== currentEditTarget.contentId) {
+            return contentItem;
+          }
+
+          return {
+            ...contentItem,
+            content_content: {
+              ...contentItem.content_content,
+              [currentEditTarget.field]: newValue,
+            },
+          };
+        })
       );
     }
 
-    const { content_type, content_content } = contentData;
+    closeEditModal();
+  };
 
-    if (content_type === "just_text") {
-      return (
-        <div className="w-full flex justify-center">
-          <p className="text-center max-w-2xl">{content_content.center}</p>
-        </div>
-      );
+  const openAddTagModal = () => {
+    setIsAddTagModalOpen(true);
+  };
+
+  const closeAddTagModal = () => {
+    setIsAddTagModalOpen(false);
+  };
+
+  const handleSaveNewTag = (newTag: string) => {
+    const trimmedTag = newTag.trim();
+    if (!trimmedTag) {
+      closeAddTagModal();
+      return;
     }
 
-    if (content_type === "just_image") {
-      return (
-        <div className="w-full flex justify-center">
-          <img
-            src={content_content.center}
-            alt="content image"
-            className="max-w-md w-full"
-          />
-        </div>
-      );
-    }
+    setArticleData((previousArticleData) => ({
+      ...previousArticleData,
+      article_tags_array: [
+        ...previousArticleData.article_tags_array,
+        trimmedTag,
+      ],
+    }));
 
-    if (content_type === "text_image") {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-          <p>{content_content.left}</p>
-          <img
-            src={content_content.right}
-            alt="content image"
-            className="w-full rounded-md"
-          />
-        </div>
-      );
-    }
+    closeAddTagModal();
+  };
 
-    if (content_type === "image_text") {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-          <img
-            src={content_content.left}
-            alt="content image"
-            className="w-full rounded-md"
-          />
-          <p>{content_content.right}</p>
-        </div>
-      );
-    }
+  const handleRemoveTag = (tagToRemove: string) => {
+    setArticleData((previousArticleData) => ({
+      ...previousArticleData,
+      article_tags_array: previousArticleData.article_tags_array.filter(
+        (tag) => tag !== tagToRemove
+      ),
+    }));
+  };
 
-    return (
-      <div className="p-4 bg-yellow-100 text-yellow-700 rounded-md">
-        ⚠ Unknown content type: {content_type}
-      </div>
+
+  const handleEditContentField = (args: {
+    contentId: string;
+    field: "center" | "left" | "right";
+    initialValue: string;
+    modalTitle: string;
+  }) => {
+    const { contentId, field, initialValue, modalTitle } = args;
+
+    openEditModal(
+      {
+        kind: "content",
+        contentId,
+        field,
+      },
+      initialValue,
+      modalTitle
+    );
+  };
+
+  const handleEditTitle = () => {
+    openEditModal(
+      { kind: "articleTitle" },
+      articleData.articleTitle,
+      "Edit article title"
+    );
+  };
+
+  const handleEditSubtitle = () => {
+    openEditModal(
+      { kind: "articleSubtitle" },
+      articleData.articleSubtitle,
+      "Edit article subtitle"
+    );
+  };
+
+  const handleEditMainImage = () => {
+    openEditModal(
+      { kind: "articleMainImage" },
+      articleData.article_main_image_url,
+      "Edit main image url"
     );
   };
 
   return (
-    <main className="flex flex-col h-full min-h-screen text-gray-600 px-24 py-10 gap-6 bg-white">
-      <h1 className="text-4xl font-bold">{selectedArticle.articleTitle}</h1>
-      <h2 className="text-xl text-gray-500">
-        {selectedArticle.articleSubtitle}
-      </h2>
+    <>
+      <main className="flex h-full min-h-screen flex-col gap-6 bg-white px-24 py-10 text-gray-600 w-full">
+        <ArticleHeader
+          title={articleData.articleTitle}
+          subtitle={articleData.articleSubtitle}
+          onEditTitle={handleEditTitle}
+          onEditSubtitle={handleEditSubtitle}
+        />
 
-      <img
-        src={selectedArticle.article_main_image_url}
-        alt="Article main image"
-        className="w-full rounded-lg shadow-md text-xs text-right min-h-50" 
+        <ArticleMainImage
+          imageUrl={articleData.article_main_image_url}
+          onEditMainImage={handleEditMainImage}
+        />
+
+        <ArticleTags
+          tags={articleData.article_tags_array}
+          onRemoveTag={handleRemoveTag}
+          onAddTag={openAddTagModal}
+        />
+
+        <ArticleContentsList
+          contentsIds={articleData.contents_array}
+          contentsData={contentsData}
+          onEditContentField={handleEditContentField}
+        />
+      </main>
+
+      <EditContentsModal
+        isOpen={isEditModalOpen}
+        initialValue={modalInitialValue}
+        title={modalTitle}
+        onSave={handleSaveEditChanges}
+        onCancel={closeEditModal}
       />
 
-      <div className="flex flex-wrap gap-2 mt-4">
-        {selectedArticle.article_tags_array.map((tag) => (
-          <span
-            key={tag}
-            className="px-3 py-1 bg-gray-200 rounded-full text-sm cursor-pointer hover:bg-gray-200/50"
-            onClick={() => {
-              router.push(`/search/tags=${tag}`);
-            }}
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-8 flex flex-col gap-6">
-        {selectedArticle.contents_array.map((contentId) => (
-          <div
-            key={contentId}
-            className="p-6 bg-gray-100 rounded-md shadow flex flex-col gap-4"
-          >
-            {renderContent(contentId)}
-          </div>
-        ))}
-      </div>
-    </main>
+      <AddTagModal
+        isOpen={isAddTagModalOpen}
+        initialValue=""
+        onSave={handleSaveNewTag}
+        onCancel={closeAddTagModal}
+      />
+    </>
   );
 }

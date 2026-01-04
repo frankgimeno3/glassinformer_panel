@@ -1,0 +1,65 @@
+[
+  {
+    "id_publication": "pub_25_000000001",
+    "publicationTitle": "Publication Title 1",
+    "date": "2026-01-10",
+    "tags": [
+      "tag1",
+      "tag2",
+      "tag3"
+    ]
+  },
+  {
+    "id_publication": "pub_25_000000002",
+    "publicationTitle": "Publication Title 2",
+    "date": "2026-01-11",
+    "tags": [
+      "tag4",
+      "tag5"
+    ]
+  },
+  {
+    "id_publication": "pub_25_000000003",
+    "publicationTitle": "Publication Title 3",
+    "date": "2026-01-12",
+    "tags": [
+      "tag1",
+      "tag6",
+      "tag7",
+      "tag8"
+    ]
+  },
+  {
+    "id_publication": "pub_25_000000004",
+    "publicationTitle": "Publication Title 4",
+    "date": "2026-01-13",
+    "tags": [
+      "tag2",
+      "tag3"
+    ]
+  },
+  {
+    "id_publication": "pub_25_000000005",
+    "publicationTitle": "Publication Title 5",
+    "date": "2026-01-14",
+    "tags": [
+      "tag9",
+      "tag10",
+      "tag11"
+    ]
+  },
+  {
+    "id_publication": "pub_25_000000006",
+    "publicationTitle": "Publication Title 6",
+    "date": "2026-01-15",
+    "tags": [
+      "tag1",
+      "tag5"
+    ]
+  }
+]
+
+
+
+
+
