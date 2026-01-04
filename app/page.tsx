@@ -15,30 +15,7 @@ const Home: FC<LoginProps> = ({ }) => {
     const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
 
-    useEffect(() => {
-        // Verificar si el usuario ya está autenticado
-        // El middleware manejará la redirección, pero podemos verificar las cookies aquí
-        const checkAuth = async () => {
-            try {
-                // Verificar si hay cookies de autenticación
-                const cookies = document.cookie.split(';');
-                const hasAuthCookie = cookies.some(cookie => 
-                    cookie.trim().startsWith('CognitoIdentityServiceProvider')
-                );
-                
-                if (hasAuthCookie) {
-                    // Si hay cookies, el middleware redirigirá automáticamente
-                    // Pero podemos forzar una verificación navegando
-                    router.replace('/logged');
-                }
-            } catch (e) {
-                // Si hay error, simplemente no hacer nada y dejar que el usuario inicie sesión
-                console.log('No hay sesión activa');
-            }
-        };
-        
-        checkAuth();
-    }, [router]);
+    // El middleware maneja la redirección automáticamente, no necesitamos verificar aquí
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
