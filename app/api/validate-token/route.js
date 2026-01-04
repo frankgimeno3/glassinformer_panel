@@ -1,5 +1,4 @@
 import { COGNITO } from "../../../env.js";
-import { verifyAccessToken, verifyIdToken } from "../../../server/features/authentication/AuthenticationService.js";
 
 export async function POST(request) {
   try {
@@ -20,6 +19,10 @@ export async function POST(request) {
     if (!idToken || !accessToken) {
       return new Response("Missing token(s)", { status: 400 });
     }
+
+    const authenticationService = await import("../../../server/features/authentication/AuthenticationService.js");
+    const verifyIdToken = authenticationService.verifyIdToken;
+    const verifyAccessToken = authenticationService.verifyAccessToken;
 
     await Promise.all([verifyIdToken(idToken), verifyAccessToken(accessToken)]);
 
