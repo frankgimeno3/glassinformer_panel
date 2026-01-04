@@ -16,11 +16,8 @@ export interface articleMiniatureInterface {
 
 export interface publicationInterface {
   id_publication: string;
-  publicationTitle: string;
-  publicationName: string;
+  redirectionLink: string;
   date: string;
   revista: string;
-  edición: string;
   número: number | string;
-  tags: string[];
 }

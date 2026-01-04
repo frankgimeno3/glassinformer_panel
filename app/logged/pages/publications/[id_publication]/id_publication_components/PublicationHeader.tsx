@@ -4,26 +4,26 @@ import React, { FC } from "react";
 import PencilSvg from "@/app/logged/logged_components/svg/PencilSvg";
 
 interface PublicationHeaderProps {
-  title: string;
-  publicationName: string;
+  redirectionLink: string;
   onEditName: () => void;
 }
 
 const PublicationHeader: FC<PublicationHeaderProps> = ({
-  title,
-  publicationName,
+  redirectionLink,
   onEditName,
 }) => {
   return (
     <header className="flex flex-col gap-3">
-      {/* Título principal con Pencil */}
+      {/* Redirection Link */}
       <div className="relative flex flex-row">
-        <h1 className="text-4xl font-bold">{title}</h1>
-      </div>
-
-      {/* Nombre de publicación con Pencil */}
-      <div className="relative flex flex-row">
-        <h2 className="text-xl text-gray-500">{publicationName}</h2>
+        <a 
+          href={redirectionLink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-xl text-blue-600 hover:text-blue-800 underline"
+        >
+          {redirectionLink}
+        </a>
         <div className="absolute bottom-0 right-[-25px]">
           <PencilSvg size="10" onClick={onEditName} />
         </div>

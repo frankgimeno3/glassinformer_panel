@@ -1,85 +1,45 @@
 [
   {
     "id_publication": "pub_25_000000001",
-    "publicationTitle": "Publication Title 1",
-    "publicationName": "Publication Name 1",
-    "date": "2026-01-10",
-    "revista": "Revista 1",
-    "edición": "Edición 1",
-    "número": "001",
-    "tags": [
-      "tag1",
-      "tag2",
-      "tag3"
-    ]
+    "redirectionLink": "https://flipbook.vidrioperfil.es/vidrio_es_213.html",
+    "date": "2025-01-10",
+    "revista": "Glassinformer",
+    "número": "2025-001"
   },
   {
     "id_publication": "pub_25_000000002",
-    "publicationTitle": "Publication Title 2",
-    "publicationName": "Publication Name 2",
-    "date": "2026-01-11",
-    "revista": "Revista 2",
-    "edición": "Edición 2",
-    "número": "002",
-    "tags": [
-      "tag4",
-      "tag5"
-    ]
+    "redirectionLink": "https://flipbook.vidrioperfil.es/vidrio_es_213.html",
+    "date": "2025-02-11",
+    "revista": "Glassinformer",
+    "número": "2025-002"
   },
   {
     "id_publication": "pub_25_000000003",
-    "publicationTitle": "Publication Title 3",
-    "publicationName": "Publication Name 3",
-    "date": "2026-01-12",
-    "revista": "Revista 3",
-    "edición": "Edición 3",
-    "número": "003",
-    "tags": [
-      "tag1",
-      "tag6",
-      "tag7",
-      "tag8"
-    ]
+    "redirectionLink": "https://flipbook.vidrioperfil.es/vidrio_es_213.html",
+    "date": "2025-03-12",
+    "revista": "Glassinformer",
+    "número": "2025-003"
   },
   {
     "id_publication": "pub_25_000000004",
-    "publicationTitle": "Publication Title 4",
-    "publicationName": "Publication Name 4",
-    "date": "2026-01-13",
-    "revista": "Revista 4",
-    "edición": "Edición 4",
-    "número": "004",
-    "tags": [
-      "tag2",
-      "tag3"
-    ]
+    "redirectionLink": "https://flipbook.vidrioperfil.es/vidrio_es_213.html",
+    "date": "2025-04-13",
+    "revista": "Glassinformer",
+    "número": "2025-004"
   },
   {
     "id_publication": "pub_25_000000005",
-    "publicationTitle": "Publication Title 5",
-    "publicationName": "Publication Name 5",
-    "date": "2026-01-14",
-    "revista": "Revista 5",
-    "edición": "Edición 5",
-    "número": "005",
-    "tags": [
-      "tag9",
-      "tag10",
-      "tag11"
-    ]
+    "redirectionLink": "https://flipbook.vidrioperfil.es/vidrio_es_213.html",
+    "date": "2025-05-14",
+    "revista": "Glassinformer",
+    "número": "2025-005"
   },
   {
     "id_publication": "pub_25_000000006",
-    "publicationTitle": "Publication Title 6",
-    "publicationName": "Publication Name 6",
-    "date": "2026-01-15",
-    "revista": "Revista 6",
-    "edición": "Edición 6",
-    "número": "006",
-    "tags": [
-      "tag1",
-      "tag5"
-    ]
+    "redirectionLink": "https://flipbook.vidrioperfil.es/vidrio_es_213.html",
+    "date": "2025-06-15",
+    "revista": "Glassinformer",
+    "número": "2025-006"
   }
 ]
 

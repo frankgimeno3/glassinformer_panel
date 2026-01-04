@@ -9,22 +9,22 @@ interface PublicationFilterProps {}
 
 const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [publicationMonth, setPublicationMonth] = useState('');
-  const [publicationYear, setPublicationYear] = useState('');
   const [revista, setRevista] = useState('');
-  const [edicion, setEdicion] = useState('');
   const [numero, setNumero] = useState('');
+  const [dateFromMonth, setDateFromMonth] = useState('');
+  const [dateFromYear, setDateFromYear] = useState('');
+  const [dateToMonth, setDateToMonth] = useState('');
+  const [dateToYear, setDateToYear] = useState('');
 
   const toggleFilter = () => {
     setIsFilterOpen(prev => !prev);
   };
   
   // Extract unique values from publications
-  const { uniqueMonths, uniqueYears, uniqueRevistas, uniqueEdiciones, uniqueNumeros } = useMemo(() => {
+  const { uniqueMonths, uniqueYears, uniqueRevistas, uniqueNumeros } = useMemo(() => {
     const months = new Set<string>();
     const years = new Set<string>();
     const revistas = new Set<string>();
-    const ediciones = new Set<string>();
     const numeros = new Set<string>();
 
     publications.forEach((pub: publicationInterface) => {
@@ -36,7 +36,6 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
         years.add(year);
       }
       if (pub.revista) revistas.add(pub.revista);
-      if (pub.edición) ediciones.add(pub.edición);
       if (pub.número !== undefined) numeros.add(String(pub.número));
     });
 
@@ -44,8 +43,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
       uniqueMonths: Array.from(months).sort(),
       uniqueYears: Array.from(years).sort().reverse(),
       uniqueRevistas: Array.from(revistas).sort(),
-      uniqueEdiciones: Array.from(ediciones).sort(),
-      uniqueNumeros: Array.from(numeros).sort((a, b) => Number(a) - Number(b))
+      uniqueNumeros: Array.from(numeros).sort()
     };
   }, []);
 
@@ -58,17 +56,17 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
   const buildSearchParams = () => {
     const params: string[] = [];
     
-    if (publicationMonth && publicationYear) {
-      params.push(`date__${publicationYear}-${publicationMonth}`);
-    }
     if (revista) {
       params.push(`revista__${revista}`);
     }
-    if (edicion) {
-      params.push(`edición__${edicion}`);
-    }
     if (numero) {
       params.push(`número__${numero}`);
+    }
+    if (dateFromMonth && dateFromYear) {
+      params.push(`dateFrom__${dateFromYear}-${dateFromMonth}`);
+    }
+    if (dateToMonth && dateToYear) {
+      params.push(`dateTo__${dateToYear}-${dateToMonth}`);
     }
 
     return params.join('&');
@@ -82,8 +80,8 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
     return '#';
   };
 
-  const hasAnyFilter = publicationMonth || publicationYear || revista || edicion || numero;
-  const canFilter = (publicationMonth && publicationYear) || revista || edicion || numero;
+  const hasAnyFilter = revista || numero || dateFromMonth || dateFromYear || dateToMonth || dateToYear;
+  const canFilter = revista || numero || (dateFromMonth && dateFromYear) || (dateToMonth && dateToYear);
 
   return (
     <div className='px-36 mx-7'>
@@ -95,46 +93,8 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
       </div>
       {isFilterOpen && (
         <div className='bg-white mb-12 shadow-xl border border-gray-100 p-5'>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4'>
-            {/* Publication Date - Month */}
-            <div>
-              <label className='block text-xs font-medium text-gray-700 mb-2'>
-                Mes
-              </label>
-              <select
-                value={publicationMonth}
-                onChange={e => setPublicationMonth(e.target.value)}
-                className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-              >
-                <option value=''>Seleccionar mes</option>
-                {uniqueMonths.map(month => (
-                  <option key={month} value={month}>
-                    {monthNames[month] || month}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Publication Date - Year */}
-            <div>
-              <label className='block text-xs font-medium text-gray-700 mb-2'>
-                Año
-              </label>
-              <select
-                value={publicationYear}
-                onChange={e => setPublicationYear(e.target.value)}
-                className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-              >
-                <option value=''>Seleccionar año</option>
-                {uniqueYears.map(year => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Revista */}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4'>
+            {/* Revista - Leftmost */}
             <div>
               <label className='block text-xs font-medium text-gray-700 mb-2'>
                 Revista
@@ -153,26 +113,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
               </select>
             </div>
 
-            {/* Edición */}
-            <div>
-              <label className='block text-xs font-medium text-gray-700 mb-2'>
-                Edición
-              </label>
-              <select
-                value={edicion}
-                onChange={e => setEdicion(e.target.value)}
-                className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-              >
-                <option value=''>Seleccionar edición</option>
-                {uniqueEdiciones.map(ed => (
-                  <option key={ed} value={ed}>
-                    {ed}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Número */}
+            {/* Número exacto */}
             <div>
               <label className='block text-xs font-medium text-gray-700 mb-2'>
                 Número
@@ -189,6 +130,72 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Filtrar por rango de fechas - Desde */}
+            <div className='col-span-2'>
+              <label className='block text-xs font-medium text-gray-700 mb-2'>
+                Filtrar por rango de fechas - Desde
+              </label>
+              <div className='grid grid-cols-2 gap-2'>
+                <select
+                  value={dateFromMonth}
+                  onChange={e => setDateFromMonth(e.target.value)}
+                  className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                >
+                  <option value=''>Mes</option>
+                  {uniqueMonths.map(month => (
+                    <option key={month} value={month}>
+                      {monthNames[month] || month}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={dateFromYear}
+                  onChange={e => setDateFromYear(e.target.value)}
+                  className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                >
+                  <option value=''>Año</option>
+                  {uniqueYears.map(year => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Filtrar por rango de fechas - Hasta */}
+            <div className='col-span-2'>
+              <label className='block text-xs font-medium text-gray-700 mb-2'>
+                Filtrar por rango de fechas - Hasta
+              </label>
+              <div className='grid grid-cols-2 gap-2'>
+                <select
+                  value={dateToMonth}
+                  onChange={e => setDateToMonth(e.target.value)}
+                  className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                >
+                  <option value=''>Mes</option>
+                  {uniqueMonths.map(month => (
+                    <option key={month} value={month}>
+                      {monthNames[month] || month}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={dateToYear}
+                  onChange={e => setDateToYear(e.target.value)}
+                  className='w-full rounded-md border border-gray-300 p-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                >
+                  <option value=''>Año</option>
+                  {uniqueYears.map(year => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 

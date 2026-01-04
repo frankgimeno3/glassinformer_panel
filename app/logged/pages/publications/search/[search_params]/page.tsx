@@ -22,30 +22,41 @@ const PublicationSearchResults: FC<PageProps> = async ({ params }) => {
 
   // Filter publications based on search params
   const filteredPublications = publications.filter((pub: any) => {
-    // Filter by publication_date (year-month)
-    if (filters.publication_date) {
-      const [year, month] = filters.publication_date.split('-');
-      const pubDate = new Date(pub.publication_date);
-      const pubYear = String(pubDate.getFullYear());
-      const pubMonth = String(pubDate.getMonth() + 1).padStart(2, '0');
-      
-      if (year && pubYear !== year) return false;
-      if (month && pubMonth !== month) return false;
-    }
-
     // Filter by revista
     if (filters.revista && pub.revista !== filters.revista) {
-      return false;
-    }
-
-    // Filter by edición
-    if (filters.edición && pub.edición !== filters.edición) {
       return false;
     }
 
     // Filter by número
     if (filters.número && String(pub.número) !== filters.número) {
       return false;
+    }
+
+    // Filter by date range (desde)
+    if (filters.dateFrom) {
+      const [fromYear, fromMonth] = filters.dateFrom.split('-');
+      const pubDate = new Date(pub.date);
+      const pubYear = String(pubDate.getFullYear());
+      const pubMonth = String(pubDate.getMonth() + 1).padStart(2, '0');
+      
+      const fromDate = new Date(parseInt(fromYear), parseInt(fromMonth) - 1, 1);
+      const pubDateObj = new Date(parseInt(pubYear), parseInt(pubMonth) - 1, 1);
+      
+      if (pubDateObj < fromDate) return false;
+    }
+
+    // Filter by date range (hasta)
+    if (filters.dateTo) {
+      const [toYear, toMonth] = filters.dateTo.split('-');
+      const pubDate = new Date(pub.date);
+      const pubYear = String(pubDate.getFullYear());
+      const pubMonth = String(pubDate.getMonth() + 1).padStart(2, '0');
+      
+      // Get last day of the month for "hasta"
+      const toDate = new Date(parseInt(toYear), parseInt(toMonth), 0);
+      const pubDateObj = new Date(parseInt(pubYear), parseInt(pubMonth) - 1, pubDate.getDate());
+      
+      if (pubDateObj > toDate) return false;
     }
 
     return true;

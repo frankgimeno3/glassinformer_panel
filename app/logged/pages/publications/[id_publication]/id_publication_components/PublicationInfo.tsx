@@ -6,22 +6,18 @@ import PencilSvg from "@/app/logged/logged_components/svg/PencilSvg";
 interface PublicationInfoProps {
   date: string;
   revista: string;
-  edición: string;
   número: number | string;
   onEditDate: () => void;
   onEditRevista: () => void;
-  onEditEdicion: () => void;
   onEditNumero: () => void;
 }
 
 const PublicationInfo: FC<PublicationInfoProps> = ({
   date,
   revista,
-  edición,
   número,
   onEditDate,
   onEditRevista,
-  onEditEdicion,
   onEditNumero,
 }) => {
   return (
@@ -48,17 +44,6 @@ const PublicationInfo: FC<PublicationInfoProps> = ({
               <p className="text-base text-gray-700">{revista}</p>
               <div className="absolute bottom-0 right-0">
                 <PencilSvg size="10" onClick={onEditRevista} />
-              </div>
-            </div>
-          </div>
-
-          {/* Edición */}
-          <div className="relative flex flex-col rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <label className="mb-1 text-sm font-medium text-gray-500">Edición</label>
-            <div className="relative flex flex-row items-center">
-              <p className="text-base text-gray-700">{edición}</p>
-              <div className="absolute bottom-0 right-0">
-                <PencilSvg size="10" onClick={onEditEdicion} />
               </div>
             </div>
           </div>

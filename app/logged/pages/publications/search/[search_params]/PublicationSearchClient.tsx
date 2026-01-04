@@ -19,23 +19,25 @@ const PublicationSearchClient: FC<PublicationSearchClientProps> = ({ filteredPub
 
   // Build heading
   const filterDescriptions: string[] = [];
-  if (filters.publication_date) {
-    const [year, month] = filters.publication_date.split('-');
-    const monthName = month ? monthNames[month] || month : '';
-    if (month && year) {
-      filterDescriptions.push(`${monthName} ${year}`);
-    } else if (year) {
-      filterDescriptions.push(`Año ${year}`);
-    }
-  }
   if (filters.revista) {
     filterDescriptions.push(`Revista: ${filters.revista}`);
   }
-  if (filters.edición) {
-    filterDescriptions.push(`Edición: ${filters.edición}`);
-  }
   if (filters.número) {
     filterDescriptions.push(`Número: ${filters.número}`);
+  }
+  if (filters.dateFrom) {
+    const [year, month] = filters.dateFrom.split('-');
+    const monthName = month ? monthNames[month] || month : '';
+    if (month && year) {
+      filterDescriptions.push(`Desde: ${monthName} ${year}`);
+    }
+  }
+  if (filters.dateTo) {
+    const [year, month] = filters.dateTo.split('-');
+    const monthName = month ? monthNames[month] || month : '';
+    if (month && year) {
+      filterDescriptions.push(`Hasta: ${monthName} ${year}`);
+    }
   }
 
   const heading = filterDescriptions.length > 0
@@ -64,15 +66,12 @@ const PublicationSearchClient: FC<PublicationSearchClientProps> = ({ filteredPub
               <div className="w-full h-56 bg-gray-300" />
 
               <div className="flex flex-col p-3 flex-grow">
-                <p className="font-semibold line-clamp-4">{pub.revista} - {pub.edición} - {pub.número}</p>
-                <p className="text-sm text-gray-400 italic pt-2">{pub.publication_date}</p>
+                <p className="font-semibold line-clamp-4">{pub.revista} - {pub.número}</p>
+                <p className="text-sm text-gray-400 italic pt-2">{pub.date}</p>
                 
                 <div className="flex flex-row flex-wrap gap-2 pt-4">
                   <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                     {pub.revista}
-                  </span>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                    {pub.edición}
                   </span>
                   <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                     {pub.número}
@@ -92,3 +91,4 @@ const PublicationSearchClient: FC<PublicationSearchClientProps> = ({ filteredPub
 };
 
 export default PublicationSearchClient;
+

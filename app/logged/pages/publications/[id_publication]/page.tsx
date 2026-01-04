@@ -51,9 +51,6 @@ export default function IdPubblicationPage() {
   const handleEditRevista = () => {
     console.log("Edit revista");
   };
-  const handleEditEdicion = () => {
-    console.log("Edit edicion");
-  };
 
   const handleEditNumber = () => {
     console.log("Edit número");
@@ -63,19 +60,16 @@ export default function IdPubblicationPage() {
     <>
       <main className="flex h-full min-h-screen flex-col gap-6 bg-white px-24 py-10 text-gray-600 w-full">
         <PublicationHeader
-          title={publicationData.publicationTitle}
-          publicationName={publicationData.publicationName}
+          redirectionLink={publicationData.redirectionLink}
           onEditName={handleEditName}
         />
 
         <PublicationInfo
           date={publicationData.date}
           revista={publicationData.revista}
-          edición={publicationData.edición}
           número={publicationData.número}
           onEditDate={handleEditDate}
           onEditRevista={handleEditRevista}
-          onEditEdicion={handleEditEdicion}
           onEditNumero={handleEditNumber}
         />
       </main>
