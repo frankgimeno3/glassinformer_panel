@@ -22,8 +22,8 @@ const PublicationSearchClient: FC<PublicationSearchClientProps> = ({ filteredPub
   if (filters.revista) {
     filterDescriptions.push(`Magazine: ${filters.revista}`);
   }
-  if (filters.número) {
-    filterDescriptions.push(`Number: ${filters.número}`);
+  if (filters.numero) {
+    filterDescriptions.push(`Number: ${filters.numero}`);
   }
   if (filters.dateFrom) {
     const [year, month] = filters.dateFrom.split('-');

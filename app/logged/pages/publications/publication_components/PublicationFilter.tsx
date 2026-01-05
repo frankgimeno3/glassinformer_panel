@@ -60,7 +60,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
       params.push(`revista__${revista}`);
     }
     if (numero) {
-      params.push(`número__${numero}`);
+      params.push(`numero__${numero}`);
     }
     if (dateFromMonth && dateFromYear) {
       params.push(`dateFrom__${dateFromYear}-${dateFromMonth}`);

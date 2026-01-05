@@ -27,8 +27,8 @@ const PublicationSearchResults: FC<PageProps> = async ({ params }) => {
       return false;
     }
 
-    // Filter by número
-    if (filters.número && String(pub.número) !== filters.número) {
+    // Filter by número (using 'numero' in URL to avoid encoding issues)
+    if (filters.numero && String(pub.número) !== filters.numero) {
       return false;
     }
 
