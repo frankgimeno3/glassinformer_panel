@@ -2,7 +2,7 @@
 
 import { FC } from "react";
 import Link from "next/link";
-import PublicationFilter from "../../publication_components/PublicationFilter";
+import PublicationFilter from "../publication_components/PublicationFilter";
 
 const monthNames: { [key: string]: string } = {
   '01': 'January', '02': 'February', '03': 'March', '04': 'April',
