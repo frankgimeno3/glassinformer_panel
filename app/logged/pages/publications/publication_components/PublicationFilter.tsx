@@ -1,6 +1,7 @@
 "use client";
-import { FC, useState, useMemo } from 'react';
+import { FC, useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import publicationsData from '@/app/contents/publicationsContents.json';
 import { publicationInterface } from '@/app/contents/interfaces';
 const publications = publicationsData as any[];
@@ -8,6 +9,7 @@ const publications = publicationsData as any[];
 interface PublicationFilterProps {}
 
 const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
+  const searchParams = useSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [revista, setRevista] = useState('');
   const [numero, setNumero] = useState('');
@@ -15,6 +17,29 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
   const [dateFromYear, setDateFromYear] = useState('');
   const [dateToMonth, setDateToMonth] = useState('');
   const [dateToYear, setDateToYear] = useState('');
+
+  // Initialize from URL params
+  useEffect(() => {
+    const revistaParam = searchParams.get('revista');
+    const numeroParam = searchParams.get('numero');
+    const dateFromParam = searchParams.get('dateFrom');
+    const dateToParam = searchParams.get('dateTo');
+
+    if (revistaParam) setRevista(revistaParam);
+    if (numeroParam) setNumero(numeroParam);
+    
+    if (dateFromParam) {
+      const [year, month] = dateFromParam.split('-');
+      if (year) setDateFromYear(year);
+      if (month) setDateFromMonth(month);
+    }
+    
+    if (dateToParam) {
+      const [year, month] = dateToParam.split('-');
+      if (year) setDateToYear(year);
+      if (month) setDateToMonth(month);
+    }
+  }, [searchParams]);
 
   const toggleFilter = () => {
     setIsFilterOpen(prev => !prev);
@@ -53,35 +78,43 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
     '09': 'September', '10': 'October', '11': 'November', '12': 'December'
   };
 
-  const buildSearchParams = () => {
-    const params: string[] = [];
+  // Check if date fields are valid (all 4 or none)
+  const isDateRangeValid = () => {
+    const hasFromMonth = !!dateFromMonth;
+    const hasFromYear = !!dateFromYear;
+    const hasToMonth = !!dateToMonth;
+    const hasToYear = !!dateToYear;
     
-    if (revista) {
-      params.push(`revista__${revista}`);
-    }
-    if (numero) {
-      params.push(`numero__${numero}`);
-    }
-    if (dateFromMonth && dateFromYear) {
-      params.push(`dateFrom__${dateFromYear}-${dateFromMonth}`);
-    }
-    if (dateToMonth && dateToYear) {
-      params.push(`dateTo__${dateToYear}-${dateToMonth}`);
-    }
-
-    return params.join('&');
+    const hasAnyDateField = hasFromMonth || hasFromYear || hasToMonth || hasToYear;
+    const hasAllDateFields = hasFromMonth && hasFromYear && hasToMonth && hasToYear;
+    
+    // Either all date fields are filled, or none
+    return !hasAnyDateField || hasAllDateFields;
   };
 
   const getFilterHref = () => {
-    const searchParams = buildSearchParams();
-    if (searchParams) {
-      return `/logged/pages/publications/search/${encodeURIComponent(searchParams)}`;
+    const params = new URLSearchParams();
+    
+    if (revista) {
+      params.set('revista', revista);
     }
-    return '#';
+    if (numero) {
+      params.set('numero', numero);
+    }
+    if (dateFromMonth && dateFromYear) {
+      params.set('dateFrom', `${dateFromYear}-${dateFromMonth}`);
+    }
+    if (dateToMonth && dateToYear) {
+      params.set('dateTo', `${dateToYear}-${dateToMonth}`);
+    }
+
+    const queryString = params.toString();
+    return queryString ? `/logged/pages/publications/search?${queryString}` : '#';
   };
 
   const hasAnyFilter = revista || numero || dateFromMonth || dateFromYear || dateToMonth || dateToYear;
-  const canFilter = revista || numero || (dateFromMonth && dateFromYear) || (dateToMonth && dateToYear);
+  const dateRangeValid = isDateRangeValid();
+  const canFilter = (revista || numero || (dateFromMonth && dateFromYear && dateToMonth && dateToYear)) && dateRangeValid;
 
   return (
     <div className='px-36 mx-7'>
@@ -199,6 +232,11 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
             </div>
           </div>
 
+          {!dateRangeValid && (dateFromMonth || dateFromYear || dateToMonth || dateToYear) && (
+            <div className='mt-2 text-xs text-red-600'>
+              Please fill all date range fields (From month, From year, To month, To year) or leave them all empty.
+            </div>
+          )}
           <div className='flex justify-end mt-4'>
             {canFilter ? (
               <Link
