@@ -1,5 +1,5 @@
 "use client";
-import React, { FC, useState, useMemo } from 'react';
+import { FC, useState, useMemo } from 'react';
 import Link from 'next/link';
 import publicationsData from '@/app/contents/publicationsContents.json';
 import { publicationInterface } from '@/app/contents/interfaces';
@@ -210,7 +210,7 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
             ) : (
               <button
                 disabled
-                className='px-4 py-2 text-sm rounded-lg bg-gray-200 text-gray-400 cursor-not-allowed'
+                className='px-4 py-2 text-sm rounded-lg bg-gray-200/30 text-gray-400 cursor-not-allowed'
               >
                 Filter
               </button>
