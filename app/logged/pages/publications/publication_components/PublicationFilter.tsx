@@ -1,5 +1,5 @@
 "use client";
-import { FC, useState, useMemo, useEffect } from 'react';
+import { FC, useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import publicationsData from '@/app/contents/publicationsContents.json';
@@ -8,7 +8,7 @@ const publications = publicationsData as any[];
 
 interface PublicationFilterProps {}
 
-const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
+const PublicationFilterContent: FC<PublicationFilterProps> = ({ }) => {
   const searchParams = useSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [revista, setRevista] = useState('');
@@ -257,6 +257,20 @@ const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
         </div>
       )}
     </div>
+  );
+};
+
+const PublicationFilter: FC<PublicationFilterProps> = ({ }) => {
+  return (
+    <Suspense fallback={
+      <div className='px-36 mx-7'>
+        <div className='flex flex-col border border-gray-100 shadow-xl text-center py-2 text-xs'>
+          <p>Loading filter...</p>
+        </div>
+      </div>
+    }>
+      <PublicationFilterContent />
+    </Suspense>
   );
 };
 

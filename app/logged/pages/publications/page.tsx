@@ -1,6 +1,6 @@
 "use client";
 
-import { FC } from "react";
+import { FC, Suspense } from "react";
 import Link from "next/link";
 
 import publications from "@/app/contents/publicationsContents.json";
@@ -23,7 +23,9 @@ const Publications: FC<PublicationsProps> = ({}) => {
         </Link>
       </div>
 
-      <PublicationFilter />
+      <Suspense fallback={<div className='px-36 mx-7'><div className='flex flex-col border border-gray-100 shadow-xl text-center py-2 text-xs'><p>Loading filter...</p></div></div>}>
+        <PublicationFilter />
+      </Suspense>
 
       <div className="flex flex-wrap py-5 gap-12 justify-center">
         {publicationsArray.map((pub: any, index: number) => ( 
