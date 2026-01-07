@@ -96,3 +96,4 @@ const PublicationSearchResults: FC<PageProps> = async ({ searchParams }) => {
 
 export default PublicationSearchResults;
 
+

@@ -14,8 +14,8 @@ apiClient.interceptors.response.use(
     error => {
         if (error.response) {
             throw {
-                status: error.status,
-                message: error.response.data.message || error.response.statusText,
+                status: error.response.status,
+                message: error.response.data?.message || error.response.statusText || 'Error del servidor',
                 data: error.response.data,
             };
         } else if (error.request) {
@@ -23,7 +23,7 @@ apiClient.interceptors.response.use(
             throw {message: 'No se recibió respuesta del servidor'};
         } else {
             console.error('Request Setup error:', error.message);
-            throw {message: error.message};
+            throw {message: error.message || 'Error desconocido'};
         }
     }
 );

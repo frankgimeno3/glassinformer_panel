@@ -1,16 +1,51 @@
 "use client";
 
-import { FC } from "react";
+import { FC, Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 
 import ArticleMiniature from "./article_components/ArticleMiniature";
 import ArticleFilter from "./article_components/ArticleFilter";
+import { ArticleService } from "@/app/service/ArticleService";
 
 import articles from "@/app/contents/articlesContents.json";
 
 interface ArticlesProps {}
 
 const Articles: FC<ArticlesProps> = ({}) => {
+  const [allArticles, setAllArticles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchArticles = async () => {
+    try {
+      // Obtener todos los artículos del API (incluye los creados dinámicamente)
+      const apiArticles = await ArticleService.getAllArticles();
+      
+      // Artículos originales del JSON estático
+      const originalArticles = Array.isArray(articles) ? articles : [];
+      const originalIds = new Set(originalArticles.map((a: any) => a.id_article));
+      
+      // Artículos creados dinámicamente (los que están en el API pero no en el JSON original)
+      const createdArticles = Array.isArray(apiArticles)
+        ? apiArticles.filter((art: any) => !originalIds.has(art.id_article))
+        : [];
+      
+      // Combinar: primero los creados, luego los originales
+      const combined = [...createdArticles, ...originalArticles];
+      setAllArticles(combined);
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      // En caso de error, usar solo los del JSON
+      const fallback = Array.isArray(articles) ? articles : [];
+      setAllArticles(fallback);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
   return (
     <div className="flex flex-col w-full bg-white">
       <div className="flex flex-col text-center bg-blue-950/70 p-5 px-46 text-white">
@@ -23,18 +58,26 @@ const Articles: FC<ArticlesProps> = ({}) => {
         </Link>
       </div>
 
-      <ArticleFilter />
+      <Suspense fallback={<div className='px-36 mx-7'><div className='flex flex-col border border-gray-100 shadow-xl text-center py-2 text-xs'><p>Loading filter...</p></div></div>}>
+        <ArticleFilter />
+      </Suspense>
 
       <div className="flex flex-wrap py-5 gap-12 justify-center ">
-        {articles.map((a, index) => (
-          <ArticleMiniature
-            key={index}
-            id_article={a.id_article}
-            titulo={a.articleTitle}
-            company={a.company}
-            date={a.date}
-          />
-        ))}
+        {loading ? (
+          <div className="text-center py-10">
+            <p className="text-gray-500">Cargando artículos...</p>
+          </div>
+        ) : (
+          allArticles.map((a: any, index: number) => (
+            <ArticleMiniature
+              key={index}
+              id_article={a.id_article}
+              titulo={a.articleTitle}
+              company={a.company}
+              date={a.date}
+            />
+          ))
+        )}
       </div>
     </div>
   );
