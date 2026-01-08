@@ -63,7 +63,7 @@ const CreatePublication: FC = () => {
       // Extraer los números ordinales y encontrar el máximo
       let maxOrdinal = 0;
       currentYearPublications.forEach((pub: any) => {
-        const match = pub.id_publication.match(/^publication_\d{2}_(\d{9})$/);
+        const match = String(pub.id_publication).match(/^publication_\d{2}_(\d{9})$/);
         if (match) {
           const ordinal = parseInt(match[1], 10);
           if (ordinal > maxOrdinal) {
@@ -92,9 +92,25 @@ const CreatePublication: FC = () => {
   useEffect(() => {
     const loadPublicationId = async () => {
       setIsGeneratingId(true);
-      const generatedId = await generatePublicationId();
-      setIdPublication(generatedId);
-      setIsGeneratingId(false);
+      try {
+        const generatedId = await generatePublicationId();
+        if (generatedId) {
+          setIdPublication(generatedId);
+        } else {
+          // Fallback si no se genera ID
+          const currentYear = new Date().getFullYear();
+          const yearSuffix = currentYear.toString().slice(-2);
+          setIdPublication(`publication_${yearSuffix}_000000001`);
+        }
+      } catch (error) {
+        console.error("Error loading publication ID:", error);
+        // Fallback en caso de error
+        const currentYear = new Date().getFullYear();
+        const yearSuffix = currentYear.toString().slice(-2);
+        setIdPublication(`publication_${yearSuffix}_000000001`);
+      } finally {
+        setIsGeneratingId(false);
+      }
     };
     
     loadPublicationId();

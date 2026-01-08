@@ -125,20 +125,25 @@ const CreateArticle: FC = () => {
       setIsGeneratingId(true);
       try {
         const generatedId = await generateArticleId();
-        if (generatedId) {
+        console.log("Generated Article ID:", generatedId);
+        if (generatedId && generatedId.trim() !== "") {
           setIdArticle(generatedId);
         } else {
           // Fallback si no se genera ID
           const currentYear = new Date().getFullYear();
           const yearSuffix = currentYear.toString().slice(-2);
-          setIdArticle(`article_${yearSuffix}_000000001`);
+          const fallbackId = `article_${yearSuffix}_000000001`;
+          console.log("Using fallback ID:", fallbackId);
+          setIdArticle(fallbackId);
         }
       } catch (error) {
         console.error("Error loading article ID:", error);
         // Fallback en caso de error
         const currentYear = new Date().getFullYear();
         const yearSuffix = currentYear.toString().slice(-2);
-        setIdArticle(`article_${yearSuffix}_000000001`);
+        const fallbackId = `article_${yearSuffix}_000000001`;
+        console.log("Using error fallback ID:", fallbackId);
+        setIdArticle(fallbackId);
       } finally {
         setIsGeneratingId(false);
       }
@@ -363,10 +368,15 @@ const CreateArticle: FC = () => {
               <label className="font-bold text-lg">ID del Artículo *</label>
               <input
                 type="text"
-                value={isGeneratingId ? "Generando..." : idArticle}
+                value={isGeneratingId ? "Generando..." : (idArticle || "")}
                 readOnly
                 disabled
+                onKeyDown={(e) => e.preventDefault()}
+                onPaste={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+                onCopy={(e) => e.preventDefault()}
                 className="w-full px-4 py-2 border rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
+                tabIndex={-1}
               />
               {isGeneratingId && (
                 <p className="text-sm text-gray-500">Generando ID automáticamente...</p>
