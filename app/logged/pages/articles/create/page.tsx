@@ -107,15 +107,16 @@ const CreateArticle: FC = () => {
       const nextOrdinal = maxOrdinal + 1;
       const ordinalString = nextOrdinal.toString().padStart(9, '0');
       
-      return `article_${yearSuffix}_${ordinalString}`;
+      const generatedId = `article_${yearSuffix}_${ordinalString}`;
+      console.log("Generated ID in function:", generatedId);
+      return generatedId;
     } catch (error) {
       console.error("Error generating article ID:", error);
-      // En caso de error, generar un ID basado en timestamp como fallback
+      // En caso de error, generar un ID basado en el año actual
       const currentYear = new Date().getFullYear();
       const yearSuffix = currentYear.toString().slice(-2);
-      const timestamp = Date.now();
-      const ordinalString = (timestamp % 1000000000).toString().padStart(9, '0');
-      return `article_${yearSuffix}_${ordinalString}`;
+      // Usar un ID simple basado en el año en lugar de timestamp
+      return `article_${yearSuffix}_000000001`;
     }
   };
 
@@ -369,17 +370,30 @@ const CreateArticle: FC = () => {
               <input
                 type="text"
                 value={isGeneratingId ? "Generando..." : (idArticle || "")}
-                readOnly
-                disabled
-                onKeyDown={(e) => e.preventDefault()}
-                onPaste={(e) => e.preventDefault()}
-                onCut={(e) => e.preventDefault()}
-                onCopy={(e) => e.preventDefault()}
+                readOnly={true}
+                disabled={true}
+                onChange={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onKeyDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 className="w-full px-4 py-2 border rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
                 tabIndex={-1}
+                autoComplete="off"
+                spellCheck={false}
               />
               {isGeneratingId && (
                 <p className="text-sm text-gray-500">Generando ID automáticamente...</p>
+              )}
+              {!isGeneratingId && idArticle && (
+                <p className="text-xs text-gray-500">ID generado automáticamente - No editable</p>
               )}
             </div>
 

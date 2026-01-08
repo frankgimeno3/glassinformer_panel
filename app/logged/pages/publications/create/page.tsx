@@ -16,8 +16,7 @@ const CreatePublication: FC = () => {
   const router = useRouter();
   const [currentPhase, setCurrentPhase] = useState<1 | 2>(1);
   
-  // Establecer fecha por defecto como hoy
-  const getTodayDate = () => {
+   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -33,35 +32,28 @@ const CreatePublication: FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingId, setIsGeneratingId] = useState(true);
 
-  // Función para generar el ID automáticamente
-  const generatePublicationId = async (): Promise<string> => {
+   const generatePublicationId = async (): Promise<string> => {
     try {
-      // Obtener todas las publicaciones existentes
-      const allPublications = await PublicationService.getAllPublications();
+       const allPublications = await PublicationService.getAllPublications();
       
-      // Validar que sea un array
-      if (!Array.isArray(allPublications)) {
+       if (!Array.isArray(allPublications)) {
         console.warn("getAllPublications no devolvió un array, usando array vacío");
         const currentYear = new Date().getFullYear();
         const yearSuffix = currentYear.toString().slice(-2);
         return `publication_${yearSuffix}_000000001`;
       }
       
-      // Obtener el año actual (últimos 2 dígitos)
-      const currentYear = new Date().getFullYear();
+       const currentYear = new Date().getFullYear();
       const yearSuffix = currentYear.toString().slice(-2);
       
-      // Patrón regex para encontrar publicaciones del año actual
-      const pattern = new RegExp(`^publication_${yearSuffix}_\\d{9}$`);
+       const pattern = new RegExp(`^publication_${yearSuffix}_\\d{9}$`);
       
-      // Filtrar publicaciones que coincidan con el patrón del año actual
-      const currentYearPublications = allPublications.filter((pub: any) => {
+       const currentYearPublications = allPublications.filter((pub: any) => {
         if (!pub || !pub.id_publication) return false;
         return pattern.test(String(pub.id_publication));
       });
       
-      // Extraer los números ordinales y encontrar el máximo
-      let maxOrdinal = 0;
+       let maxOrdinal = 0;
       currentYearPublications.forEach((pub: any) => {
         const match = String(pub.id_publication).match(/^publication_\d{2}_(\d{9})$/);
         if (match) {
@@ -72,15 +64,13 @@ const CreatePublication: FC = () => {
         }
       });
       
-      // Generar el siguiente ID
-      const nextOrdinal = maxOrdinal + 1;
+       const nextOrdinal = maxOrdinal + 1;
       const ordinalString = nextOrdinal.toString().padStart(9, '0');
       
       return `publication_${yearSuffix}_${ordinalString}`;
     } catch (error) {
       console.error("Error generating publication ID:", error);
-      // En caso de error, generar un ID basado en timestamp como fallback
-      const currentYear = new Date().getFullYear();
+       const currentYear = new Date().getFullYear();
       const yearSuffix = currentYear.toString().slice(-2);
       const timestamp = Date.now();
       const ordinalString = (timestamp % 1000000000).toString().padStart(9, '0');
@@ -88,8 +78,7 @@ const CreatePublication: FC = () => {
     }
   };
 
-  // Generar ID automáticamente al cargar el componente
-  useEffect(() => {
+   useEffect(() => {
     const loadPublicationId = async () => {
       setIsGeneratingId(true);
       try {
@@ -97,15 +86,13 @@ const CreatePublication: FC = () => {
         if (generatedId) {
           setIdPublication(generatedId);
         } else {
-          // Fallback si no se genera ID
-          const currentYear = new Date().getFullYear();
+           const currentYear = new Date().getFullYear();
           const yearSuffix = currentYear.toString().slice(-2);
           setIdPublication(`publication_${yearSuffix}_000000001`);
         }
       } catch (error) {
         console.error("Error loading publication ID:", error);
-        // Fallback en caso de error
-        const currentYear = new Date().getFullYear();
+         const currentYear = new Date().getFullYear();
         const yearSuffix = currentYear.toString().slice(-2);
         setIdPublication(`publication_${yearSuffix}_000000001`);
       } finally {
@@ -151,8 +138,7 @@ const CreatePublication: FC = () => {
       router.refresh();
     } catch (error: any) {
       console.error("Error creating publication - full error:", error);
-      // Extract error message properly
-      let errorMessage = "Error desconocido";
+       let errorMessage = "Error desconocido";
       if (typeof error === "string") {
         errorMessage = error;
       } else if (error?.message) {
@@ -182,8 +168,7 @@ const CreatePublication: FC = () => {
       </div>
 
       <div className="flex flex-col p-8 max-w-4xl mx-auto w-full">
-        {/* FASE 1: Datos de la Publicación */}
-        {currentPhase === 1 && (
+         {currentPhase === 1 && (
           <div className="flex flex-col gap-6">
             <h2 className="text-xl font-bold">Datos de la Publicación</h2>
 
@@ -266,8 +251,7 @@ const CreatePublication: FC = () => {
           </div>
         )}
 
-        {/* FASE 2: Revisión Final */}
-        {currentPhase === 2 && (
+         {currentPhase === 2 && (
           <div className="flex flex-col gap-6">
             <h2 className="text-xl font-bold">Revisión Final</h2>
 
