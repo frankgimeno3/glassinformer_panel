@@ -21,7 +21,6 @@ const ArticleMainImage: FC<ArticleMainImageProps> = ({
         className="min-h-50 w-full rounded-lg shadow-md text-right text-xs"
         width={100}
         height={100}
-         
       />
       <div className="absolute bottom-2 right-2 z-20">
         <PencilSvg size="10" onClick={onEditMainImage} />

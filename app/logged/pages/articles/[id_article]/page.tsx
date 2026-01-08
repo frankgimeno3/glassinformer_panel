@@ -1,907 +1,451 @@
 "use client";
 
-import React, { FC, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+
+import { articleInterface } from "@/app/contents/interfaces";
 import { ArticleService } from "@/app/service/ArticleService";
 import { ContentService } from "@/app/service/ContentService";
+import EditContentsModal from "@/app/logged/logged_components/modals/EditContentsModal";
+import DeleteArticleModal from "@/app/logged/logged_components/modals/DeleteArticleModal";
+import ArticleHeader from "./id_article_components/ArticleHeader";
+import ArticleMainImage from "./id_article_components/ArticleMainImage";
+import ArticleTags from "./id_article_components/ArticleTags";
+import ArticleContentsList from "./id_article_components/ArticleContentsList";
 
-interface Content {
-  content_id: string;
-  content_type: "text_image" | "image_text" | "just_image" | "just_text";
-  content_content: {
-    left: string;
-    right: string;
-    center: string;
-  };
-}
+type EditTarget =
+  | { kind: "articleTitle" }
+  | { kind: "articleSubtitle" }
+  | { kind: "articleMainImage" }
+  | { kind: "company" }
+  | { kind: "date" }
+  | { kind: "tags" }
+  | { kind: "content"; contentId: string; field: "center" | "left" | "right" };
 
-interface ArticleData {
-  id_article: string;
-  articleTitle: string;
-  articleSubtitle: string;
-  article_main_image_url: string;
-  company: string;
-  date: string;
-  article_tags_array: string[];
-  contents_array: string[];
-}
-
-const CreateArticle: FC = () => {
+export default function IdArticlePage() {
+  const params = useParams();
   const router = useRouter();
-  const [currentPhase, setCurrentPhase] = useState<1 | 2 | 3>(1);
+  const id_article = params?.id_article as string;
 
-  // Fase 1: Datos del artículo
-  const [idArticle, setIdArticle] = useState("");
-  const [articleTitle, setArticleTitle] = useState("");
-  const [articleSubtitle, setArticleSubtitle] = useState("");
-  const [articleMainImageUrl, setArticleMainImageUrl] = useState("https://source.unsplash.com/800x600/?nature");
-  const [company, setCompany] = useState("");
-  // Establecer fecha por defecto como hoy
-  const getTodayDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  const [articleData, setArticleData] = useState<articleInterface | null>(null);
+  const [contentsData, setContentsData] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [modalInitialValue, setModalInitialValue] = useState<string>("");
+  const [modalTitle, setModalTitle] = useState<string>("Edit contents");
+  const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(null);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  const normalizeArticle = (raw: any): articleInterface => {
+    return {
+      id_article: String(raw?.id_article ?? ""),
+      articleTitle: String(raw?.articleTitle ?? ""),
+      articleSubtitle: String(raw?.articleSubtitle ?? ""),
+      article_main_image_url: String(raw?.article_main_image_url ?? ""),
+      company: String(raw?.company ?? ""),
+      date: String(raw?.date ?? ""),
+      article_tags_array: Array.isArray(raw?.article_tags_array) ? raw.article_tags_array : [],
+      contents_array: Array.isArray(raw?.contents_array) ? raw.contents_array : [],
+    };
   };
-  const [date, setDate] = useState(getTodayDate());
-  const [tags, setTags] = useState("");
-  const [tagsArray, setTagsArray] = useState<string[]>([]);
 
-  // Fase 2: Contenidos
-  const [contents, setContents] = useState<Content[]>([]);
-  const [showContentModal, setShowContentModal] = useState(false);
-  const [contentModalPosition, setContentModalPosition] = useState<number | null>(null);
-  const [editingContent, setEditingContent] = useState<Content | null>(null);
-  const [selectedContentType, setSelectedContentType] = useState<Content["content_type"] | "">("");
-  const [contentFormData, setContentFormData] = useState({
-    left: "",
-    right: "",
-    center: "",
-  });
+  useEffect(() => {
+    const loadArticleData = async () => {
+      console.log("[IdArticlePage] Starting to load article data, id_article:", id_article);
+      setLoading(true);
+      setError(null);
 
-  // Fase 3: Revisión
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGeneratingId, setIsGeneratingId] = useState(true);
+      try {
+        console.log("[IdArticlePage] Calling ArticleService.getArticleById with:", id_article);
+        const articleRaw = await ArticleService.getArticleById(id_article);
+        console.log("[IdArticlePage] Raw article data received:", articleRaw);
 
-  // Función para generar el ID automáticamente
-  const generateArticleId = async (): Promise<string> => {
-    try {
-      // Obtener todos los artículos existentes
-      const allArticles = await ArticleService.getAllArticles();
-      
-      // Validar que sea un array
-      if (!Array.isArray(allArticles)) {
-        console.warn("getAllArticles no devolvió un array, usando array vacío");
-        const currentYear = new Date().getFullYear();
-        const yearSuffix = currentYear.toString().slice(-2);
-        return `article_${yearSuffix}_000000001`;
-      }
-      
-      // Obtener el año actual (últimos 2 dígitos)
-      const currentYear = new Date().getFullYear();
-      const yearSuffix = currentYear.toString().slice(-2);
-      
-      // Patrón regex para encontrar artículos del año actual
-      const pattern = new RegExp(`^article_${yearSuffix}_\\d{9}$`);
-      
-      // Filtrar artículos que coincidan con el patrón del año actual
-      const currentYearArticles = allArticles.filter((article: any) => {
-        if (!article || !article.id_article) return false;
-        return pattern.test(String(article.id_article));
-      });
-      
-      // Extraer los números ordinales y encontrar el máximo
-      let maxOrdinal = 0;
-      currentYearArticles.forEach((article: any) => {
-        const match = String(article.id_article).match(/^article_\d{2}_(\d{9})$/);
-        if (match) {
-          const ordinal = parseInt(match[1], 10);
-          if (ordinal > maxOrdinal) {
-            maxOrdinal = ordinal;
-          }
+        if (!articleRaw) {
+          console.warn("[IdArticlePage] No article found for id:", id_article);
+          setError("El artículo que buscas no existe.");
+          setArticleData(null);
+          return;
         }
-      });
-      
-      // Generar el siguiente ID
-      const nextOrdinal = maxOrdinal + 1;
-      const ordinalString = nextOrdinal.toString().padStart(9, '0');
-      
-      const generatedId = `article_${yearSuffix}_${ordinalString}`;
-      console.log("Generated ID in function:", generatedId);
-      return generatedId;
-    } catch (error) {
-      console.error("Error generating article ID:", error);
-      // En caso de error, generar un ID basado en el año actual
-      const currentYear = new Date().getFullYear();
-      const yearSuffix = currentYear.toString().slice(-2);
-      // Usar un ID simple basado en el año en lugar de timestamp
-      return `article_${yearSuffix}_000000001`;
+
+        const article = normalizeArticle(articleRaw);
+        console.log("[IdArticlePage] Normalized article:", article);
+        setArticleData(article);
+
+        // Load contents
+        if (article.contents_array && article.contents_array.length > 0) {
+          try {
+            const allContents = await ContentService.getAllContents();
+            const articleContents = article.contents_array
+              .map((contentId: string) => {
+                return allContents.find((c: any) => c.content_id === contentId);
+              })
+              .filter((c: any) => c !== undefined);
+            console.log("[IdArticlePage] Loaded contents:", articleContents);
+            setContentsData(articleContents);
+          } catch (contentError) {
+            console.error("[IdArticlePage] Error loading contents:", contentError);
+            setContentsData([]);
+          }
+        } else {
+          setContentsData([]);
+        }
+      } catch (err: any) {
+        console.error("[IdArticlePage] Error loading article:", err);
+        console.error("[IdArticlePage] Error details:", {
+          message: err?.message,
+          stack: err?.stack,
+          response: err?.response,
+          data: err?.data,
+          status: err?.status
+        });
+        
+        // Determinar el mensaje de error apropiado
+        let errorMessage = "Error al cargar el artículo";
+        if (err?.status === 500 || err?.status === 404) {
+          errorMessage = "El artículo que buscas no existe o ha sido eliminado.";
+        } else if (err?.message) {
+          errorMessage = err.message;
+        } else if (err?.data?.message) {
+          errorMessage = err.data.message;
+        }
+        
+        setError(errorMessage);
+        setArticleData(null);
+      } finally {
+        console.log("[IdArticlePage] Setting loading to false");
+        setLoading(false);
+      }
+    };
+
+    if (id_article) {
+      loadArticleData();
+    } else {
+      console.warn("[IdArticlePage] No id_article provided");
+      setLoading(false);
+      setError("ID de artículo no válido.");
+      setArticleData(null);
+    }
+  }, [id_article]);
+
+  const openEditModal = (
+    editTarget: EditTarget,
+    value: string,
+    title: string = "Edit contents"
+  ) => {
+    setCurrentEditTarget(editTarget);
+    setModalInitialValue(value);
+    setModalTitle(title);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setCurrentEditTarget(null);
+  };
+
+  const createArticleUpdateData = (updates: Partial<articleInterface>) => {
+    if (!articleData) {
+      throw new Error("Article data not loaded");
+    }
+    return {
+      articleTitle: updates.articleTitle ?? articleData.articleTitle,
+      articleSubtitle: updates.articleSubtitle ?? articleData.articleSubtitle,
+      article_main_image_url: updates.article_main_image_url ?? articleData.article_main_image_url,
+      company: updates.company ?? articleData.company,
+      date: updates.date ?? articleData.date,
+      article_tags_array: updates.article_tags_array ?? articleData.article_tags_array,
+      contents_array: updates.contents_array ?? articleData.contents_array,
+    };
+  };
+
+  const handleSaveEditChanges = async (newValue: string) => {
+    if (!currentEditTarget || !articleData) return;
+
+    setIsSaving(true);
+    try {
+      if (currentEditTarget.kind === "articleTitle") {
+        const updateData = createArticleUpdateData({ articleTitle: newValue });
+        await ArticleService.updateArticle(id_article, updateData);
+        setArticleData({ ...articleData, articleTitle: newValue });
+      } else if (currentEditTarget.kind === "articleSubtitle") {
+        const updateData = createArticleUpdateData({ articleSubtitle: newValue });
+        await ArticleService.updateArticle(id_article, updateData);
+        setArticleData({ ...articleData, articleSubtitle: newValue });
+      } else if (currentEditTarget.kind === "articleMainImage") {
+        const updateData = createArticleUpdateData({ article_main_image_url: newValue });
+        await ArticleService.updateArticle(id_article, updateData);
+        setArticleData({ ...articleData, article_main_image_url: newValue });
+      } else if (currentEditTarget.kind === "company") {
+        const updateData = createArticleUpdateData({ company: newValue });
+        await ArticleService.updateArticle(id_article, updateData);
+        setArticleData({ ...articleData, company: newValue });
+      } else if (currentEditTarget.kind === "date") {
+        const updateData = createArticleUpdateData({ date: newValue });
+        await ArticleService.updateArticle(id_article, updateData);
+        setArticleData({ ...articleData, date: newValue });
+      } else if (currentEditTarget.kind === "tags") {
+        // Parse tags from comma-separated string
+        const tagsArray = newValue.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        const updateData = createArticleUpdateData({ article_tags_array: tagsArray });
+        await ArticleService.updateArticle(id_article, updateData);
+        setArticleData({ ...articleData, article_tags_array: tagsArray });
+      } else if (currentEditTarget.kind === "content") {
+        const updatedContents = contentsData.map((contentItem) => {
+          if (contentItem.content_id !== currentEditTarget.contentId) {
+            return contentItem;
+          }
+          return {
+            ...contentItem,
+            content_content: {
+              ...contentItem.content_content,
+              [currentEditTarget.field]: newValue
+            }
+          };
+        });
+        const contentToUpdate = updatedContents.find((c) => c.content_id === currentEditTarget.contentId);
+        if (contentToUpdate) {
+          await ContentService.updateContent(currentEditTarget.contentId, contentToUpdate);
+        }
+        setContentsData(updatedContents);
+      }
+
+      closeEditModal();
+    } catch (error: any) {
+      console.error("Error saving changes:", error);
+      const errorMessage =
+        typeof error === "string"
+          ? error
+          : error?.message
+          ? error.message
+          : error?.data?.message
+          ? error.data.message
+          : "Error desconocido";
+      alert(`Error al guardar cambios: ${errorMessage}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Generar ID automáticamente al cargar el componente
-  useEffect(() => {
-    const loadArticleId = async () => {
-      setIsGeneratingId(true);
-      try {
-        const generatedId = await generateArticleId();
-        console.log("Generated Article ID:", generatedId);
-        if (generatedId && generatedId.trim() !== "") {
-          setIdArticle(generatedId);
-        } else {
-          // Fallback si no se genera ID
-          const currentYear = new Date().getFullYear();
-          const yearSuffix = currentYear.toString().slice(-2);
-          const fallbackId = `article_${yearSuffix}_000000001`;
-          console.log("Using fallback ID:", fallbackId);
-          setIdArticle(fallbackId);
-        }
-      } catch (error) {
-        console.error("Error loading article ID:", error);
-        // Fallback en caso de error
-        const currentYear = new Date().getFullYear();
-        const yearSuffix = currentYear.toString().slice(-2);
-        const fallbackId = `article_${yearSuffix}_000000001`;
-        console.log("Using error fallback ID:", fallbackId);
-        setIdArticle(fallbackId);
-      } finally {
-        setIsGeneratingId(false);
-      }
-    };
-    
-    loadArticleId();
-  }, []);
+  const handleEditTitle = () => {
+    if (!articleData) return;
+    openEditModal(
+      { kind: "articleTitle" },
+      articleData.articleTitle ?? "",
+      "Edit article title"
+    );
+  };
+
+  const handleEditSubtitle = () => {
+    if (!articleData) return;
+    openEditModal(
+      { kind: "articleSubtitle" },
+      articleData.articleSubtitle ?? "",
+      "Edit article subtitle"
+    );
+  };
+
+  const handleEditMainImage = () => {
+    if (!articleData) return;
+    openEditModal(
+      { kind: "articleMainImage" },
+      articleData.article_main_image_url ?? "",
+      "Edit main image URL"
+    );
+  };
+
+  const handleEditCompany = () => {
+    if (!articleData) return;
+    openEditModal(
+      { kind: "company" },
+      articleData.company ?? "",
+      "Edit company"
+    );
+  };
+
+  const handleEditDate = () => {
+    if (!articleData) return;
+    openEditModal(
+      { kind: "date" },
+      articleData.date ?? "",
+      "Edit date"
+    );
+  };
+
+  const handleEditTags = () => {
+    if (!articleData) return;
+    const tagsString = articleData.article_tags_array?.join(", ") ?? "";
+    openEditModal(
+      { kind: "tags" },
+      tagsString,
+      "Edit tags (comma-separated)"
+    );
+  };
 
   const handleAddTag = () => {
-    if (tags.trim()) {
-      setTagsArray([...tagsArray, tags.trim()]);
-      setTags("");
-    }
+    handleEditTags();
   };
 
-  const handleRemoveTag = (index: number) => {
-    setTagsArray(tagsArray.filter((_, i) => i !== index));
+  const handleRemoveTag = (tag: string) => {
+    if (!articleData) return;
+    const updatedTags = articleData.article_tags_array.filter(t => t !== tag);
+    const updateData = createArticleUpdateData({ article_tags_array: updatedTags });
+    ArticleService.updateArticle(id_article, updateData)
+      .then(() => {
+        setArticleData({ ...articleData, article_tags_array: updatedTags });
+      })
+      .catch((error: any) => {
+        console.error("Error removing tag:", error);
+        alert("Error al eliminar el tag");
+      });
   };
 
-  const handlePhase1Next = () => {
-    // El ID ya está generado automáticamente, solo validar título y fecha
-    if (articleTitle && date) {
-      setCurrentPhase(2);
-    }
+  const handleEditContentField = (args: {
+    contentId: string;
+    field: "center" | "left" | "right";
+    initialValue: string;
+    modalTitle: string;
+  }) => {
+    openEditModal(
+      { kind: "content", contentId: args.contentId, field: args.field },
+      args.initialValue,
+      args.modalTitle
+    );
   };
 
-  const openContentModal = (position: number | null, content?: Content) => {
-    setContentModalPosition(position);
-    if (content) {
-      setEditingContent(content);
-      setSelectedContentType(content.content_type);
-      setContentFormData(content.content_content);
-    } else {
-      setEditingContent(null);
-      setSelectedContentType("");
-      setContentFormData({ left: "", right: "", center: "" });
-    }
-    setShowContentModal(true);
-  };
+  const openDeleteModal = () => setIsDeleteModalOpen(true);
+  const closeDeleteModal = () => setIsDeleteModalOpen(false);
 
-  const closeContentModal = () => {
-    setShowContentModal(false);
-    setContentModalPosition(null);
-    setEditingContent(null);
-    setSelectedContentType("");
-    setContentFormData({ left: "", right: "", center: "" });
-  };
-
-  const generateContentId = () => {
-    return `id_content_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
-
-  const handleContentTypeSelect = (type: Content["content_type"]) => {
-    setSelectedContentType(type);
-    // Reset form based on type
-    if (type === "text_image") {
-      setContentFormData({ left: "", right: "", center: "no" });
-    } else if (type === "image_text") {
-      setContentFormData({ left: "", right: "", center: "no" });
-    } else if (type === "just_image") {
-      setContentFormData({ left: "no", right: "no", center: "" });
-    } else if (type === "just_text") {
-      setContentFormData({ left: "no", right: "no", center: "" });
-    }
-  };
-
-  const handleContentConfirm = () => {
-    if (!selectedContentType) return;
-
-    // Validate based on content type
-    let isValid = false;
-    if (selectedContentType === "text_image") {
-      isValid = contentFormData.left.trim() !== "" && contentFormData.right.trim() !== "";
-    } else if (selectedContentType === "image_text") {
-      isValid = contentFormData.left.trim() !== "" && contentFormData.right.trim() !== "";
-    } else if (selectedContentType === "just_image") {
-      isValid = contentFormData.center.trim() !== "";
-    } else if (selectedContentType === "just_text") {
-      isValid = contentFormData.center.trim() !== "";
-    }
-
-    if (!isValid) {
-      alert("Por favor, complete todos los campos requeridos");
-      return;
-    }
-
-    const newContent: Content = {
-      content_id: editingContent?.content_id || generateContentId(),
-      content_type: selectedContentType,
-      content_content: { ...contentFormData },
-    };
-
-    if (editingContent) {
-      // Update existing content
-      setContents(contents.map((c) => (c.content_id === editingContent.content_id ? newContent : c)));
-    } else {
-      // Insert new content at position
-      if (contentModalPosition === null) {
-        setContents([...contents, newContent]);
-      } else {
-        const newContents = [...contents];
-        newContents.splice(contentModalPosition, 0, newContent);
-        setContents(newContents);
-      }
-    }
-
-    closeContentModal();
-  };
-
-  const handleDeleteContent = (contentId: string) => {
-    if (confirm("¿Está seguro de eliminar este contenido?")) {
-      setContents(contents.filter((c) => c.content_id !== contentId));
-    }
-  };
-
-  const handlePhase2Next = () => {
-    setCurrentPhase(3);
-  };
-
-  const handlePhase2Back = () => {
-    setCurrentPhase(1);
-  };
-
-  const handlePhase3Back = () => {
-    setCurrentPhase(2);
-  };
-
-  const handleFinalSubmit = async () => {
-    setIsSubmitting(true);
+  const handleDeleteArticle = async () => {
+    setIsDeleting(true);
     try {
-      // Create all contents first (only if there are contents)
-      const contentIds: string[] = [];
-      if (contents.length > 0) {
-        for (const content of contents) {
-          try {
-            console.log("Creating content:", JSON.stringify(content, null, 2));
-            const response = await ContentService.createContent(content);
-            console.log("Content created successfully:", response);
-            contentIds.push(content.content_id);
-          } catch (contentError: any) {
-            console.error("Error creating content - full error:", contentError);
-            // Extract error message properly
-            let errorMessage = "Error desconocido";
-            if (typeof contentError === "string") {
-              errorMessage = contentError;
-            } else if (contentError?.message) {
-              errorMessage = contentError.message;
-            } else if (contentError?.data?.message) {
-              errorMessage = contentError.data.message;
-            } else if (contentError?.status) {
-              errorMessage = `Error ${contentError.status}: ${contentError.message || "Error del servidor"}`;
-            } else if (contentError?.data) {
-              errorMessage = typeof contentError.data === "string" 
-                ? contentError.data 
-                : JSON.stringify(contentError.data);
-            } else {
-              errorMessage = JSON.stringify(contentError);
-            }
-            throw new Error(`Error al crear contenido: ${errorMessage}`);
-          }
-        }
-      }
-
-      // Create article with content IDs
-      const articleData: ArticleData = {
-        id_article: idArticle,
-        articleTitle,
-        articleSubtitle,
-        article_main_image_url: articleMainImageUrl,
-        company,
-        date,
-        article_tags_array: tagsArray,
-        contents_array: contentIds,
-      };
-
-      console.log("Creating article:", JSON.stringify(articleData, null, 2));
-      const articleResponse = await ArticleService.createArticle(articleData);
-      console.log("Article created successfully:", articleResponse);
-
-      alert("¡Artículo creado exitosamente!");
+      await ArticleService.deleteArticle(id_article);
       router.push("/logged/pages/articles");
       router.refresh();
     } catch (error: any) {
-      console.error("Error creating article - full error:", error);
-      // Extract error message properly
-      let errorMessage = "Error desconocido";
-      if (typeof error === "string") {
-        errorMessage = error;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.data?.message) {
-        errorMessage = error.data.message;
-      } else if (error?.status) {
-        errorMessage = `Error ${error.status}: ${error.message || "Error del servidor"}`;
-      } else if (error?.data) {
-        errorMessage = typeof error.data === "string" 
-          ? error.data 
-          : JSON.stringify(error.data);
-      } else {
-        errorMessage = JSON.stringify(error);
-      }
-      alert(`Error al crear el artículo: ${errorMessage}`);
+      console.error("Error deleting article:", error);
+      const errorMessage =
+        typeof error === "string"
+          ? error
+          : error?.message
+          ? error.message
+          : error?.data?.message
+          ? error.data.message
+          : "Error desconocido";
+      alert(`Error al eliminar el artículo: ${errorMessage}`);
     } finally {
-      setIsSubmitting(false);
+      setIsDeleting(false);
     }
   };
 
+  if (loading) {
+    return (
+      <main className="flex h-full min-h-screen flex-col items-center justify-center bg-white px-24 py-10 text-gray-600 w-full">
+        <p className="text-lg">Cargando artículo...</p>
+      </main>
+    );
+  }
+
+  if (error || !articleData) {
+    return (
+      <main className="flex h-full min-h-screen flex-col items-center justify-center bg-white px-24 py-10 text-gray-600 w-full">
+        <p className="text-red-500 text-lg">
+          {error || "El artículo que buscas no existe."}
+        </p>
+        <button
+          onClick={() => router.push("/logged/pages/articles")}
+          className="mt-4 px-4 py-2 bg-blue-950 text-white rounded-xl"
+        >
+          Volver a artículos
+        </button>
+      </main>
+    );
+  }
+
   return (
-    <div className="flex flex-col w-full bg-white min-h-screen">
-      <div className="flex flex-col text-center bg-blue-950/70 p-5 px-46 text-white">
-        <p className="text-2xl">Crear Nuevo Artículo</p>
-        <p className="text-sm mt-2">Fase {currentPhase} de 3</p>
-      </div>
-
-      <div className="flex flex-col p-8 max-w-4xl mx-auto w-full">
-        {/* FASE 1: Datos del Artículo */}
-        {currentPhase === 1 && (
-          <div className="flex flex-col gap-6">
-            <h2 className="text-xl font-bold">Datos del Artículo</h2>
-
-            <div className="space-y-2">
-              <label className="font-bold text-lg">ID del Artículo *</label>
-              <input
-                type="text"
-                value={isGeneratingId ? "Generando..." : (idArticle || "")}
-                readOnly={true}
-                disabled={true}
-                onChange={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onKeyDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onPaste={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className="w-full px-4 py-2 border rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
-                tabIndex={-1}
-                autoComplete="off"
-                spellCheck={false}
-              />
-              {isGeneratingId && (
-                <p className="text-sm text-gray-500">Generando ID automáticamente...</p>
-              )}
-              {!isGeneratingId && idArticle && (
-                <p className="text-xs text-gray-500">ID generado automáticamente - No editable</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-bold text-lg">Título del Artículo *</label>
-              <input
-                type="text"
-                value={articleTitle}
-                onChange={(e) => setArticleTitle(e.target.value)}
-                className="w-full px-4 py-2 border rounded-xl"
-                placeholder="Article Title"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-bold text-lg">Subtítulo del Artículo</label>
-              <input
-                type="text"
-                value={articleSubtitle}
-                onChange={(e) => setArticleSubtitle(e.target.value)}
-                className="w-full px-4 py-2 border rounded-xl"
-                placeholder="Article Subtitle"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-bold text-lg">URL de Imagen Principal</label>
-              <input
-                type="text"
-                value={articleMainImageUrl}
-                onChange={(e) => setArticleMainImageUrl(e.target.value)}
-                className="w-full px-4 py-2 border rounded-xl"
-                placeholder="image url"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-bold text-lg">Compañía</label>
-              <input
-                type="text"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                className="w-full px-4 py-2 border rounded-xl"
-                placeholder="Company"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-bold text-lg">Fecha *</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-2 border rounded-xl"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="font-bold text-lg">Tags</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
-                  className="flex-1 px-4 py-2 border rounded-xl"
-                  placeholder="Escriba un tag y presione Enter"
-                />
-                <button
-                  onClick={handleAddTag}
-                  className="bg-blue-950 text-white px-4 py-2 rounded-xl"
-                >
-                  Agregar
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {tagsArray.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                  >
-                    {tag}
-                    <button
-                      onClick={() => handleRemoveTag(index)}
-                      className="text-blue-800 hover:text-blue-950"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <button
-                onClick={() => router.push("/logged/pages/articles")}
-                className="flex-1 bg-gray-300 py-2 rounded-xl"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handlePhase1Next}
-                disabled={isGeneratingId || !articleTitle || !date}
-                className={`flex-1 py-2 rounded-xl ${
-                  !isGeneratingId && articleTitle && date
-                    ? "bg-blue-950 text-white"
-                    : "bg-gray-300 text-gray-500"
-                }`}
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* FASE 2: Creador de Contenidos */}
-        {currentPhase === 2 && (
-          <div className="flex flex-col gap-6">
-            <h2 className="text-xl font-bold">Contenidos del Artículo</h2>
-            <p className="text-sm text-gray-600">
-              Pase el mouse entre los contenidos para agregar uno nuevo. Haga clic en un contenido para editarlo.
-            </p>
-
-            <div className="flex flex-col gap-4">
-              {contents.length === 0 ? (
-                <div
-                  className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-950 hover:bg-blue-50"
-                  onClick={() => openContentModal(null)}
-                >
-                  <p className="text-gray-500">Haga clic para agregar el primer contenido</p>
-                </div>
-              ) : (
-                contents.map((content, index) => (
-                  <React.Fragment key={content.content_id}>
-                    {/* Hover zone before content */}
-                    <div
-                      className="group relative h-4 -mb-2 z-10"
-                      onMouseEnter={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        if (rect.height < 20) {
-                          e.currentTarget.style.height = "40px";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.height = "16px";
-                      }}
-                    >
-                      <div className="hidden group-hover:flex items-center justify-center h-full bg-blue-100 border-2 border-dashed border-blue-300 rounded cursor-pointer">
-                        <button
-                          onClick={() => openContentModal(index)}
-                          className="text-blue-950 font-semibold"
-                        >
-                          + Agregar contenido aquí
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Content card */}
-                    <div className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">
-                              {content.content_type}
-                            </span>
-                            <span className="text-xs text-gray-500">#{index + 1}</span>
-                          </div>
-                          <div className="text-sm text-gray-700">
-                            {content.content_type === "text_image" && (
-                              <p>Texto: {content.content_content.left.substring(0, 50)}...</p>
-                            )}
-                            {content.content_type === "image_text" && (
-                              <p>Imagen: {content.content_content.left}</p>
-                            )}
-                            {content.content_type === "just_image" && (
-                              <p>Imagen: {content.content_content.center}</p>
-                            )}
-                            {content.content_type === "just_text" && (
-                              <p>Texto: {content.content_content.center.substring(0, 50)}...</p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => openContentModal(null, content)}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDeleteContent(content.content_id)}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </React.Fragment>
-                ))
-              )}
-
-              {/* Add button at the end */}
-              {contents.length > 0 && (
-                <div
-                  className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:border-blue-950 hover:bg-blue-50"
-                  onClick={() => openContentModal(null)}
-                >
-                  <p className="text-gray-500">+ Agregar contenido al final</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <button
-                onClick={handlePhase2Back}
-                className="flex-1 bg-gray-300 py-2 rounded-xl"
-              >
-                Atrás
-              </button>
-              <button
-                onClick={handlePhase2Next}
-                className="flex-1 bg-blue-950 text-white py-2 rounded-xl"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* FASE 3: Revisión Final */}
-        {currentPhase === 3 && (
-          <div className="flex flex-col gap-6">
-            <h2 className="text-xl font-bold">Revisión Final</h2>
-
-            <div className="border border-gray-200 rounded-xl p-6 bg-gray-50">
-              <h3 className="font-bold text-lg mb-4">Datos del Artículo</h3>
-              <div className="space-y-2 text-sm">
-                <p><strong>ID:</strong> {idArticle}</p>
-                <p><strong>Título:</strong> {articleTitle}</p>
-                <p><strong>Subtítulo:</strong> {articleSubtitle || "N/A"}</p>
-                <p><strong>Compañía:</strong> {company || "N/A"}</p>
-                <p><strong>Fecha:</strong> {date}</p>
-                <p><strong>Tags:</strong> {tagsArray.length > 0 ? tagsArray.join(", ") : "Ninguno"}</p>
-                {articleMainImageUrl && (
-                  <div className="mt-4">
-                    <p className="font-semibold mb-2">Imagen Principal:</p>
-                    <img
-                      src={articleMainImageUrl}
-                      alt="Article main image"
-                      className="w-full max-w-md rounded-lg shadow-md"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="border border-gray-200 rounded-xl p-6 bg-gray-50">
-              <h3 className="font-bold text-lg mb-4">Contenidos ({contents.length})</h3>
-              <div className="space-y-6">
-                {contents.map((content, index) => (
-                  <div key={content.content_id} className="border-l-4 border-blue-500 pl-4 py-2">
-                    <p className="font-semibold text-sm mb-2">
-                      {index + 1}. {content.content_type}
-                    </p>
-                    
-                    {content.content_type === "just_text" && (
-                      <div className="bg-white p-3 rounded border">
-                        <p className="text-sm">{content.content_content.center}</p>
-                      </div>
-                    )}
-                    
-                    {content.content_type === "just_image" && (
-                      <div className="bg-white p-3 rounded border">
-                        <img
-                          src={content.content_content.center}
-                          alt="Content image"
-                          className="w-full max-w-md rounded"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
-                          }}
-                        />
-                      </div>
-                    )}
-                    
-                    {content.content_type === "text_image" && (
-                      <div className="bg-white p-3 rounded border grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">Texto (izquierda):</p>
-                          <p className="text-sm">{content.content_content.left}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">Imagen (derecha):</p>
-                          <img
-                            src={content.content_content.right}
-                            alt="Content image"
-                            className="w-full rounded"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    
-                    {content.content_type === "image_text" && (
-                      <div className="bg-white p-3 rounded border grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">Imagen (izquierda):</p>
-                          <img
-                            src={content.content_content.left}
-                            alt="Content image"
-                            className="w-full rounded"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">Texto (derecha):</p>
-                          <p className="text-sm">{content.content_content.right}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <p className="text-xs text-gray-500 mt-2">ID: {content.content_id}</p>
-                  </div>
-                ))}
-                {contents.length === 0 && (
-                  <p className="text-gray-500 text-sm">No hay contenidos agregados</p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <button
-                onClick={handlePhase3Back}
-                disabled={isSubmitting}
-                className="flex-1 bg-gray-300 py-2 rounded-xl"
-              >
-                Atrás
-              </button>
-              <button
-                onClick={handleFinalSubmit}
-                disabled={isSubmitting}
-                className={`flex-1 py-2 rounded-xl ${
-                  isSubmitting
-                    ? "bg-gray-400 text-gray-600"
-                    : "bg-blue-950 text-white"
-                }`}
-              >
-                {isSubmitting ? "Creando..." : "Finalizar y Crear Artículo"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Modal de Creación/Edición de Contenido */}
-        {showContentModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            onClick={closeContentModal}
+    <>
+      <main className="flex h-full min-h-screen flex-col gap-6 bg-white px-24 py-10 text-gray-600 w-full">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={openDeleteModal}
+            disabled={isDeleting}
+            className={`px-4 py-2 rounded-xl text-white font-medium ${
+              isDeleting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700 cursor-pointer"
+            }`}
           >
-            <div
-              className="relative flex flex-col p-6 bg-white shadow-xl rounded-xl gap-6 text-gray-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+            {isDeleting ? "Eliminando..." : "Eliminar artículo"}
+          </button>
+        </div>
+
+        <ArticleHeader
+          title={articleData.articleTitle}
+          subtitle={articleData.articleSubtitle}
+          onEditTitle={handleEditTitle}
+          onEditSubtitle={handleEditSubtitle}
+        />
+
+        <ArticleMainImage
+          imageUrl={articleData.article_main_image_url}
+          onEditMainImage={handleEditMainImage}
+        />
+
+        <div className="flex flex-col gap-4 mt-4">
+          <div className="flex items-center gap-4">
+            <span className="font-semibold">Compañía:</span>
+            <span>{articleData.company || "Sin compañía"}</span>
+            <button
+              onClick={handleEditCompany}
+              className="text-blue-600 hover:text-blue-800 text-sm"
             >
-              <div className="flex items-center justify-between pb-4 border-b">
-                <h2 className="text-xl font-bold">
-                  {editingContent ? "Editar Contenido" : "Nuevo Contenido"}
-                </h2>
-                <button
-                  onClick={closeContentModal}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-
-              {!selectedContentType ? (
-                <div className="flex flex-col gap-3">
-                  <p className="font-bold">Seleccione el tipo de contenido:</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {(["text_image", "image_text", "just_image", "just_text"] as const).map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => handleContentTypeSelect(type)}
-                        className="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-950 hover:bg-blue-50 text-left"
-                      >
-                        <p className="font-semibold">{type.replace("_", " ").toUpperCase()}</p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {type === "text_image" && "Texto a la izquierda, imagen a la derecha"}
-                          {type === "image_text" && "Imagen a la izquierda, texto a la derecha"}
-                          {type === "just_image" && "Solo imagen centrada"}
-                          {type === "just_text" && "Solo texto centrado"}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <p className="font-bold">Tipo: {selectedContentType}</p>
-                    <button
-                      onClick={() => setSelectedContentType("")}
-                      className="text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      Cambiar tipo
-                    </button>
-                  </div>
-
-                  {(selectedContentType === "text_image" || selectedContentType === "image_text") && (
-                    <>
-                      <div className="space-y-2">
-                        <label className="font-bold">
-                          {selectedContentType === "text_image" ? "Texto (izquierda)" : "Imagen (izquierda)"} *
-                        </label>
-                        {selectedContentType === "text_image" ? (
-                          <textarea
-                            value={contentFormData.left}
-                            onChange={(e) => setContentFormData({ ...contentFormData, left: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-xl min-h-[100px]"
-                            placeholder="Ingrese el texto..."
-                          />
-                        ) : (
-                          <input
-                            type="text"
-                            value={contentFormData.left}
-                            onChange={(e) => setContentFormData({ ...contentFormData, left: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-xl"
-                            placeholder="URL de la imagen..."
-                          />
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <label className="font-bold">
-                          {selectedContentType === "text_image" ? "Imagen (derecha)" : "Texto (derecha)"} *
-                        </label>
-                        {selectedContentType === "text_image" ? (
-                          <input
-                            type="text"
-                            value={contentFormData.right}
-                            onChange={(e) => setContentFormData({ ...contentFormData, right: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-xl"
-                            placeholder="URL de la imagen..."
-                          />
-                        ) : (
-                          <textarea
-                            value={contentFormData.right}
-                            onChange={(e) => setContentFormData({ ...contentFormData, right: e.target.value })}
-                            className="w-full px-4 py-2 border rounded-xl min-h-[100px]"
-                            placeholder="Ingrese el texto..."
-                          />
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {(selectedContentType === "just_image" || selectedContentType === "just_text") && (
-                    <div className="space-y-2">
-                      <label className="font-bold">
-                        {selectedContentType === "just_image" ? "Imagen (centrada)" : "Texto (centrado)"} *
-                      </label>
-                      {selectedContentType === "just_image" ? (
-                        <input
-                          type="text"
-                          value={contentFormData.center}
-                          onChange={(e) => setContentFormData({ ...contentFormData, center: e.target.value })}
-                          className="w-full px-4 py-2 border rounded-xl"
-                          placeholder="URL de la imagen..."
-                        />
-                      ) : (
-                        <textarea
-                          value={contentFormData.center}
-                          onChange={(e) => setContentFormData({ ...contentFormData, center: e.target.value })}
-                          className="w-full px-4 py-2 border rounded-xl min-h-[150px]"
-                          placeholder="Ingrese el texto..."
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 pt-4">
-                    <button
-                      onClick={closeContentModal}
-                      className="flex-1 bg-gray-300 py-2 rounded-xl"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={handleContentConfirm}
-                      className="flex-1 bg-blue-950 text-white py-2 rounded-xl"
-                    >
-                      Confirmar
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+              Editar
+            </button>
           </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
-export default CreateArticle;
+          <div className="flex items-center gap-4">
+            <span className="font-semibold">Fecha:</span>
+            <span>{articleData.date || "Sin fecha"}</span>
+            <button
+              onClick={handleEditDate}
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              Editar
+            </button>
+          </div>
+        </div>
+
+        <ArticleTags
+          tags={articleData.article_tags_array || []}
+          onRemoveTag={handleRemoveTag}
+          onAddTag={handleAddTag}
+        />
+
+        <ArticleContentsList
+          contentsIds={articleData.contents_array || []}
+          contentsData={contentsData}
+          onEditContentField={handleEditContentField}
+        />
+      </main>
+
+      <EditContentsModal
+        isOpen={isEditModalOpen}
+        initialValue={modalInitialValue}
+        title={modalTitle}
+        onSave={handleSaveEditChanges}
+        onCancel={closeEditModal}
+      />
+
+      <DeleteArticleModal
+        isOpen={isDeleteModalOpen}
+        articleTitle={articleData.articleTitle || "Sin título"}
+        onConfirm={handleDeleteArticle}
+        onCancel={closeDeleteModal}
+      />
+    </>
+  );
+}
