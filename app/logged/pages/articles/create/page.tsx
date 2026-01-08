@@ -70,6 +70,14 @@ const CreateArticle: FC = () => {
       // Obtener todos los artículos existentes
       const allArticles = await ArticleService.getAllArticles();
       
+      // Validar que sea un array
+      if (!Array.isArray(allArticles)) {
+        console.warn("getAllArticles no devolvió un array, usando array vacío");
+        const currentYear = new Date().getFullYear();
+        const yearSuffix = currentYear.toString().slice(-2);
+        return `article_${yearSuffix}_000000001`;
+      }
+      
       // Obtener el año actual (últimos 2 dígitos)
       const currentYear = new Date().getFullYear();
       const yearSuffix = currentYear.toString().slice(-2);
@@ -340,9 +348,8 @@ const CreateArticle: FC = () => {
                 type="text"
                 value={isGeneratingId ? "Generando..." : idArticle}
                 readOnly
-                disabled={isGeneratingId}
+                disabled
                 className="w-full px-4 py-2 border rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
-                placeholder="article_25_000000001"
               />
               {isGeneratingId && (
                 <p className="text-sm text-gray-500">Generando ID automáticamente...</p>
