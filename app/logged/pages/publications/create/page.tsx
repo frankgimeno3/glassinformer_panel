@@ -175,17 +175,13 @@ const CreatePublication: FC = () => {
               <label className="font-bold text-lg">ID de Publicación *</label>
               <input
                 type="text"
-                value={isGeneratingId ? "Generando..." : (idPublication || "")}
+                value={isGeneratingId ? "Generando..." : idPublication}
                 readOnly
                 disabled
                 className="w-full px-4 py-2 border rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
-                placeholder={isGeneratingId ? "" : "publication_XX_000000001"}
               />
               {isGeneratingId && (
                 <p className="text-sm text-gray-500">Generando ID automáticamente...</p>
-              )}
-              {!isGeneratingId && idPublication && (
-                <p className="text-xs text-gray-500">ID generado automáticamente</p>
               )}
             </div>
 

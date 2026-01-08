@@ -86,14 +86,15 @@ const CreateArticle: FC = () => {
       const pattern = new RegExp(`^article_${yearSuffix}_\\d{9}$`);
       
       // Filtrar artículos que coincidan con el patrón del año actual
-      const currentYearArticles = allArticles.filter((article: any) => 
-        pattern.test(article.id_article)
-      );
+      const currentYearArticles = allArticles.filter((article: any) => {
+        if (!article || !article.id_article) return false;
+        return pattern.test(String(article.id_article));
+      });
       
       // Extraer los números ordinales y encontrar el máximo
       let maxOrdinal = 0;
       currentYearArticles.forEach((article: any) => {
-        const match = article.id_article.match(/^article_\d{2}_(\d{9})$/);
+        const match = String(article.id_article).match(/^article_\d{2}_(\d{9})$/);
         if (match) {
           const ordinal = parseInt(match[1], 10);
           if (ordinal > maxOrdinal) {
@@ -122,9 +123,25 @@ const CreateArticle: FC = () => {
   useEffect(() => {
     const loadArticleId = async () => {
       setIsGeneratingId(true);
-      const generatedId = await generateArticleId();
-      setIdArticle(generatedId);
-      setIsGeneratingId(false);
+      try {
+        const generatedId = await generateArticleId();
+        if (generatedId) {
+          setIdArticle(generatedId);
+        } else {
+          // Fallback si no se genera ID
+          const currentYear = new Date().getFullYear();
+          const yearSuffix = currentYear.toString().slice(-2);
+          setIdArticle(`article_${yearSuffix}_000000001`);
+        }
+      } catch (error) {
+        console.error("Error loading article ID:", error);
+        // Fallback en caso de error
+        const currentYear = new Date().getFullYear();
+        const yearSuffix = currentYear.toString().slice(-2);
+        setIdArticle(`article_${yearSuffix}_000000001`);
+      } finally {
+        setIsGeneratingId(false);
+      }
     };
     
     loadArticleId();
