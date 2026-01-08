@@ -63,6 +63,9 @@ const ContentRenderer: FC<ContentRendererProps> = ({
           src={imageUrl}
           alt="content image"
           className="w-full max-w-md"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
+          }}
         />
         <div className="absolute bottom-1 right-1 z-20">
           <PencilSvg size="10" onClick={handleEditImage} />
@@ -110,6 +113,9 @@ const ContentRenderer: FC<ContentRendererProps> = ({
             src={rightImageUrl}
             alt="content image"
             className="w-full rounded-md"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
+            }}
           />
           <div className="absolute bottom-1 right-1 z-20">
             <PencilSvg size="10" onClick={handleEditRightImage} />
@@ -150,6 +156,9 @@ const ContentRenderer: FC<ContentRendererProps> = ({
             src={leftImageUrl}
             alt="content image"
             className="w-full rounded-md"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
+            }}
           />
           <div className="absolute bottom-1 right-1 z-20">
             <PencilSvg size="10" onClick={handleEditLeftImage} />

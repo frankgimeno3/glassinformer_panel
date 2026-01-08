@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FC, useState } from "react";
+import React, { FC, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArticleService } from "@/app/service/ArticleService";
 import { ContentService } from "@/app/service/ContentService";
@@ -34,9 +34,17 @@ const CreateArticle: FC = () => {
   const [idArticle, setIdArticle] = useState("");
   const [articleTitle, setArticleTitle] = useState("");
   const [articleSubtitle, setArticleSubtitle] = useState("");
-  const [articleMainImageUrl, setArticleMainImageUrl] = useState("");
+  const [articleMainImageUrl, setArticleMainImageUrl] = useState("https://source.unsplash.com/800x600/?nature");
   const [company, setCompany] = useState("");
-  const [date, setDate] = useState("");
+  // Establecer fecha por defecto como hoy
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [date, setDate] = useState(getTodayDate());
   const [tags, setTags] = useState("");
   const [tagsArray, setTagsArray] = useState<string[]>([]);
 
@@ -54,6 +62,65 @@ const CreateArticle: FC = () => {
 
   // Fase 3: Revisión
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingId, setIsGeneratingId] = useState(true);
+
+  // Función para generar el ID automáticamente
+  const generateArticleId = async (): Promise<string> => {
+    try {
+      // Obtener todos los artículos existentes
+      const allArticles = await ArticleService.getAllArticles();
+      
+      // Obtener el año actual (últimos 2 dígitos)
+      const currentYear = new Date().getFullYear();
+      const yearSuffix = currentYear.toString().slice(-2);
+      
+      // Patrón regex para encontrar artículos del año actual
+      const pattern = new RegExp(`^article_${yearSuffix}_\\d{9}$`);
+      
+      // Filtrar artículos que coincidan con el patrón del año actual
+      const currentYearArticles = allArticles.filter((article: any) => 
+        pattern.test(article.id_article)
+      );
+      
+      // Extraer los números ordinales y encontrar el máximo
+      let maxOrdinal = 0;
+      currentYearArticles.forEach((article: any) => {
+        const match = article.id_article.match(/^article_\d{2}_(\d{9})$/);
+        if (match) {
+          const ordinal = parseInt(match[1], 10);
+          if (ordinal > maxOrdinal) {
+            maxOrdinal = ordinal;
+          }
+        }
+      });
+      
+      // Generar el siguiente ID
+      const nextOrdinal = maxOrdinal + 1;
+      const ordinalString = nextOrdinal.toString().padStart(9, '0');
+      
+      return `article_${yearSuffix}_${ordinalString}`;
+    } catch (error) {
+      console.error("Error generating article ID:", error);
+      // En caso de error, generar un ID basado en timestamp como fallback
+      const currentYear = new Date().getFullYear();
+      const yearSuffix = currentYear.toString().slice(-2);
+      const timestamp = Date.now();
+      const ordinalString = (timestamp % 1000000000).toString().padStart(9, '0');
+      return `article_${yearSuffix}_${ordinalString}`;
+    }
+  };
+
+  // Generar ID automáticamente al cargar el componente
+  useEffect(() => {
+    const loadArticleId = async () => {
+      setIsGeneratingId(true);
+      const generatedId = await generateArticleId();
+      setIdArticle(generatedId);
+      setIsGeneratingId(false);
+    };
+    
+    loadArticleId();
+  }, []);
 
   const handleAddTag = () => {
     if (tags.trim()) {
@@ -67,7 +134,8 @@ const CreateArticle: FC = () => {
   };
 
   const handlePhase1Next = () => {
-    if (idArticle && articleTitle && date) {
+    // El ID ya está generado automáticamente, solo validar título y fecha
+    if (articleTitle && date) {
       setCurrentPhase(2);
     }
   };
@@ -270,11 +338,15 @@ const CreateArticle: FC = () => {
               <label className="font-bold text-lg">ID del Artículo *</label>
               <input
                 type="text"
-                value={idArticle}
-                onChange={(e) => setIdArticle(e.target.value)}
-                className="w-full px-4 py-2 border rounded-xl"
+                value={isGeneratingId ? "Generando..." : idArticle}
+                readOnly
+                disabled={isGeneratingId}
+                className="w-full px-4 py-2 border rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
                 placeholder="article_25_000000001"
               />
+              {isGeneratingId && (
+                <p className="text-sm text-gray-500">Generando ID automáticamente...</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -376,9 +448,9 @@ const CreateArticle: FC = () => {
               </button>
               <button
                 onClick={handlePhase1Next}
-                disabled={!idArticle || !articleTitle || !date}
+                disabled={isGeneratingId || !articleTitle || !date}
                 className={`flex-1 py-2 rounded-xl ${
-                  idArticle && articleTitle && date
+                  !isGeneratingId && articleTitle && date
                     ? "bg-blue-950 text-white"
                     : "bg-gray-300 text-gray-500"
                 }`}
@@ -518,19 +590,91 @@ const CreateArticle: FC = () => {
                 <p><strong>Compañía:</strong> {company || "N/A"}</p>
                 <p><strong>Fecha:</strong> {date}</p>
                 <p><strong>Tags:</strong> {tagsArray.length > 0 ? tagsArray.join(", ") : "Ninguno"}</p>
-                <p><strong>URL Imagen:</strong> {articleMainImageUrl || "N/A"}</p>
+                {articleMainImageUrl && (
+                  <div className="mt-4">
+                    <p className="font-semibold mb-2">Imagen Principal:</p>
+                    <img
+                      src={articleMainImageUrl}
+                      alt="Article main image"
+                      className="w-full max-w-md rounded-lg shadow-md"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="border border-gray-200 rounded-xl p-6 bg-gray-50">
               <h3 className="font-bold text-lg mb-4">Contenidos ({contents.length})</h3>
-              <div className="space-y-3">
+              <div className="space-y-6">
                 {contents.map((content, index) => (
-                  <div key={content.content_id} className="border-l-4 border-blue-500 pl-4">
-                    <p className="font-semibold text-sm">
+                  <div key={content.content_id} className="border-l-4 border-blue-500 pl-4 py-2">
+                    <p className="font-semibold text-sm mb-2">
                       {index + 1}. {content.content_type}
                     </p>
-                    <p className="text-xs text-gray-600">ID: {content.content_id}</p>
+                    
+                    {content.content_type === "just_text" && (
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-sm">{content.content_content.center}</p>
+                      </div>
+                    )}
+                    
+                    {content.content_type === "just_image" && (
+                      <div className="bg-white p-3 rounded border">
+                        <img
+                          src={content.content_content.center}
+                          alt="Content image"
+                          className="w-full max-w-md rounded"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {content.content_type === "text_image" && (
+                      <div className="bg-white p-3 rounded border grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Texto (izquierda):</p>
+                          <p className="text-sm">{content.content_content.left}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Imagen (derecha):</p>
+                          <img
+                            src={content.content_content.right}
+                            alt="Content image"
+                            className="w-full rounded"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {content.content_type === "image_text" && (
+                      <div className="bg-white p-3 rounded border grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Imagen (izquierda):</p>
+                          <img
+                            src={content.content_content.left}
+                            alt="Content image"
+                            className="w-full rounded"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Texto (derecha):</p>
+                          <p className="text-sm">{content.content_content.right}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-gray-500 mt-2">ID: {content.content_id}</p>
                   </div>
                 ))}
                 {contents.length === 0 && (

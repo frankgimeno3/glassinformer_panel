@@ -2,9 +2,8 @@
 import { FC, useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import publicationsData from '@/app/contents/publicationsContents.json';
+import { PublicationService } from '@/app/service/PublicationService';
 import { publicationInterface } from '@/app/contents/interfaces';
-const publications = publicationsData as any[];
 
 interface PublicationFilterProps {}
 
@@ -17,6 +16,24 @@ const PublicationFilterContent: FC<PublicationFilterProps> = ({ }) => {
   const [dateFromYear, setDateFromYear] = useState('');
   const [dateToMonth, setDateToMonth] = useState('');
   const [dateToYear, setDateToYear] = useState('');
+  const [publications, setPublications] = useState<publicationInterface[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load publications from API
+  useEffect(() => {
+    const loadPublications = async () => {
+      try {
+        const apiPublications = await PublicationService.getAllPublications();
+        setPublications(Array.isArray(apiPublications) ? apiPublications : []);
+      } catch (error) {
+        console.error("Error loading publications for filter:", error);
+        setPublications([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPublications();
+  }, []);
 
   // Initialize from URL params
   useEffect(() => {
@@ -70,7 +87,7 @@ const PublicationFilterContent: FC<PublicationFilterProps> = ({ }) => {
       uniqueRevistas: Array.from(revistas).sort(),
       uniqueNumeros: Array.from(numeros).sort().reverse() // Most recent first (descending order)
     };
-  }, []);
+  }, [publications]);
 
   const monthNames: { [key: string]: string } = {
     '01': 'January', '02': 'February', '03': 'March', '04': 'April',

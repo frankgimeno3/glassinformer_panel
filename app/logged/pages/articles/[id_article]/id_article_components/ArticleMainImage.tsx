@@ -18,6 +18,9 @@ const ArticleMainImage: FC<ArticleMainImageProps> = ({
         src={imageUrl}
         alt="Article main image"
         className="min-h-50 w-full rounded-lg shadow-md text-right text-xs"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = "https://source.unsplash.com/800x600/?nature";
+        }}
       />
       <div className="absolute bottom-2 right-2 z-20">
         <PencilSvg size="10" onClick={onEditMainImage} />

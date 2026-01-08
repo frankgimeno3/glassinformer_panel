@@ -15,8 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Glassinformer Panel",
   description: "Glassinformer Panel - Content Management System",
-  viewport: "width=device-width, initial-scale=1",
   robots: "noindex, nofollow", // Panel privado
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

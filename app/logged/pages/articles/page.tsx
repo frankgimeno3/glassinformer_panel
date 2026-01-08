@@ -7,8 +7,6 @@ import ArticleMiniature from "./article_components/ArticleMiniature";
 import ArticleFilter from "./article_components/ArticleFilter";
 import { ArticleService } from "@/app/service/ArticleService";
 
-import articles from "@/app/contents/articlesContents.json";
-
 interface ArticlesProps {}
 
 const Articles: FC<ArticlesProps> = ({}) => {
@@ -17,26 +15,18 @@ const Articles: FC<ArticlesProps> = ({}) => {
 
   const fetchArticles = async () => {
     try {
-      // Obtener todos los artículos del API (incluye los creados dinámicamente)
+      // Obtener todos los artículos del API (incluye los del JSON y los creados dinámicamente)
       const apiArticles = await ArticleService.getAllArticles();
       
-      // Artículos originales del JSON estático
-      const originalArticles = Array.isArray(articles) ? articles : [];
-      const originalIds = new Set(originalArticles.map((a: any) => a.id_article));
-      
-      // Artículos creados dinámicamente (los que están en el API pero no en el JSON original)
-      const createdArticles = Array.isArray(apiArticles)
-        ? apiArticles.filter((art: any) => !originalIds.has(art.id_article))
+      // Filtrar y normalizar artículos válidos
+      const validArticles = Array.isArray(apiArticles)
+        ? apiArticles.filter((art: any) => art && art.id_article && art.articleTitle)
         : [];
       
-      // Combinar: primero los creados, luego los originales
-      const combined = [...createdArticles, ...originalArticles];
-      setAllArticles(combined);
+      setAllArticles(validArticles);
     } catch (error) {
       console.error("Error fetching articles:", error);
-      // En caso de error, usar solo los del JSON
-      const fallback = Array.isArray(articles) ? articles : [];
-      setAllArticles(fallback);
+      setAllArticles([]);
     } finally {
       setLoading(false);
     }
@@ -68,15 +58,17 @@ const Articles: FC<ArticlesProps> = ({}) => {
             <p className="text-gray-500">Cargando artículos...</p>
           </div>
         ) : (
-          allArticles.map((a: any, index: number) => (
-            <ArticleMiniature
-              key={index}
-              id_article={a.id_article}
-              titulo={a.articleTitle}
-              company={a.company}
-              date={a.date}
-            />
-          ))
+          allArticles
+            .filter((a: any) => a && a.id_article && a.articleTitle)
+            .map((a: any, index: number) => (
+              <ArticleMiniature
+                key={a.id_article || index}
+                id_article={a.id_article || ""}
+                titulo={a.articleTitle || ""}
+                company={a.company || ""}
+                date={a.date || ""}
+              />
+            ))
         )}
       </div>
     </div>

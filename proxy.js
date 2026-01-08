@@ -31,7 +31,7 @@ function setCachedValidation(tokenKey, isValid) {
     }
 }
 
-export async function middleware(request) {
+export async function proxy(request) {
     const response = NextResponse.next();
     const {pathname} = request.nextUrl;
     
@@ -147,3 +147,4 @@ export const config = {
         '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)).*)',
     ],
 }
+

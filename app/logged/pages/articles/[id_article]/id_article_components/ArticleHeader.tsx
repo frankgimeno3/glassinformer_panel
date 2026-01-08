@@ -16,6 +16,15 @@ const ArticleHeader: FC<ArticleHeaderProps> = ({
   onEditTitle,
   onEditSubtitle,
 }) => {
+  console.log("[ArticleHeader] Received props:", {
+    title,
+    subtitle,
+    titleType: typeof title,
+    subtitleType: typeof subtitle,
+    titleIsNull: title === null,
+    subtitleIsNull: subtitle === null
+  });
+  
   return (
     <header className="flex flex-col gap-3">
       {/* Título con Pencil */}
